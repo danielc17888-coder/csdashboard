@@ -127,7 +127,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .pb{padding:14px 16px}
 .cw{padding:12px 16px 14px}
 canvas{max-height:200px}
- 
+
 /* ZOOM MODAL — double-click any panel to enlarge */
 .panel.zoomable{cursor:zoom-in;position:relative}
 .zoom-hint{position:absolute;top:11px;right:16px;font-size:9px;color:var(--purple);font-family:var(--mono);opacity:0;transition:opacity .15s;pointer-events:none;display:flex;align-items:center;gap:3px;background:var(--card);padding:2px 6px;border-radius:4px;z-index:5}
@@ -295,6 +295,62 @@ canvas{max-height:200px}
 .lb-score-num{font-weight:800;font-size:14px;min-width:20px;text-align:right}
 .lb-score-lbl{font-size:11px;color:#64748b}
 .lb-wks{text-align:right;font-size:11px;color:#64748b;font-family:var(--mono);white-space:nowrap}
+/* ── AUDIT (prefixed "aud-" — "au-" is already used by the Automation page) ── */
+.aud-up{color:var(--green)}.aud-down{color:var(--red)}.aud-flat{color:var(--muted)}
+.aud-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:12px}
+.aud-brand-block{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;overflow:hidden}
+.aud-brand-head{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.aud-brand-dot{width:10px;height:10px;border-radius:50%}
+.aud-brand-name{font-size:14px;font-weight:800}
+.aud-brand-body{padding:16px 18px}
+/* ── AGENT AUDIT PROFILE ── */
+.ap-search-wrap{position:relative;flex:1;min-width:220px;max-width:360px}
+.ap-search-input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:12px;padding:8px 12px 8px 32px;border-radius:8px;font-family:var(--font)}
+.ap-search-input:focus{outline:none;border-color:var(--purple)}
+.ap-search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none}
+.ap-suggest-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,0.4);max-height:280px;overflow-y:auto;z-index:60;display:none}
+.ap-suggest-list.open{display:block}
+.ap-suggest-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ap-suggest-item:last-child{border-bottom:none}
+.ap-suggest-item:hover{background:rgba(155,127,244,0.08)}
+.ap-suggest-name{font-size:12px;font-weight:700;color:var(--text)}
+.ap-suggest-meta{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.ap-suggest-empty{padding:14px;text-align:center;color:var(--muted);font-size:11px}
+.ap-directory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ap-dir-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;min-width:0}
+.ap-dir-card:hover{border-color:var(--purple);background:rgba(155,127,244,0.06);transform:translateY(-1px)}
+.ap-dir-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border2);background:var(--bg)}
+.ap-dir-avatar-fallback{width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#0a0d16}
+.ap-dir-info{min-width:0;flex:1}
+.ap-dir-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-dir-meta{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;display:flex;align-items:center;gap:6px}
+.ap-dir-stat{font-size:10px;color:var(--teal);font-family:var(--mono);margin-top:3px}
+.ap-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border2);background:var(--bg)}
+.ap-photo-fallback{width:64px;height:64px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#0a0d16;border:2px solid var(--border2)}
+.ap-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.03em;font-family:var(--mono)}
+.ap-badge.internal{background:var(--red-d);color:var(--red)}
+.ap-badge.outsource{background:var(--amber-d);color:var(--amber)}
+.ap-badge.good{background:var(--green-d);color:var(--green)}
+.ap-badge.average{background:var(--amber-d);color:var(--amber)}
+.ap-badge.bad{background:var(--red-d);color:var(--red)}
+.ap-task-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ap-task-row:last-child{border-bottom:none}
+.ap-task-label{min-width:110px;flex-shrink:0;font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.05em;padding-top:1px}
+.ap-task-remark{font-size:12px;color:var(--text);line-height:1.5}
+.ap-noprofile{padding:14px;text-align:center;color:var(--muted);font-size:11px;background:var(--bg);border:1px dashed var(--border2);border-radius:8px}
+/* ── Agent Info: avatar+name left, plain text facts below, Task/Remark cells right ── */
+.ap-header-row{display:flex;gap:16px;align-items:flex-start}
+.ap-header-left{display:flex;gap:14px;align-items:flex-start;flex-shrink:0;min-width:220px}
+.ap-text-info{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.ap-text-info-line{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--muted)}
+.ap-text-info-lbl{min-width:84px;flex-shrink:0}
+.ap-text-info-line b{color:var(--text);font-weight:700}
+.ap-cellrow{flex:1;min-width:0;display:flex;gap:12px}
+.ap-cell{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px}
+.ap-cell-lbl{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.ap-cell-list{list-style:none;margin:0;padding:0;font-size:12px;color:var(--text);line-height:1.9}
+.ap-cell-list li{padding-left:14px;position:relative}
+.ap-cell-list li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--purple)}
 /* ── Sapphire Dark theme ── */
 body.sapphire{
   --bg:#01050f;--panel:#020c1e;--card:#051428;--border:#0c2a4a;--border2:#0e3060;
@@ -357,6 +413,9 @@ body.light select option{background:#ffffff;color:#0c1e35}
   <div class="nav-sec" data-i18n="performance">Agent Performance</div>
   <div class="nav-item" onclick="showPage('sla',this)"><div class="nav-dot" style="background:#00e676"></div><span>SLA Metrics</span></div>
   <div class="nav-item" onclick="showPage('qa',this)"><div class="nav-dot" style="background:#ff4081"></div><span data-i18n="qaErrors">QA Errors</span></div>
+  <div class="nav-sec" data-i18n="auditSec">Audit</div>
+  <div class="nav-item" onclick="showAuditDomain('agentbot',this)"><div class="nav-dot" style="background:#9b7ff4"></div><span data-i18n="auditAgentBot">Agent & Bot</span></div>
+  <div class="nav-item" onclick="showAuditDomain('agentprofile',this)"><div class="nav-dot" style="background:#ffd54f"></div><span data-i18n="auditAgentProfile">Agent Audit Profile</span></div>
   <div class="sb-footer">
     <div class="conn-box"><div><span class="conn-dot"></span><span class="conn-lbl" id="conn-lbl">Connecting…</span></div><div class="conn-sub" id="conn-sub">Google Sheets API</div></div>
     <button class="lang-btn" onclick="toggleLang()">🌐 中文 / English</button>
@@ -803,6 +862,45 @@ body.light select option{background:#ffffff;color:#0c1e35}
       </div>
     </div>
 
+    <!-- AUDIT -->
+    <div class="page" id="page-audit">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="ph-t" id="audit-domain-title" style="font-size:15px">👤🤖 Agent & Bot</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="filter-lbl" data-i18n="brand">Brand</span>
+          <select class="fsel" id="audit-brand-sel" onchange="setAuditBrandFromSelect()">
+            <option value="all" selected class="i18n-allbrands">All Brands</option>
+            <option value="CX">CX</option>
+            <option value="MP">MP</option>
+            <option value="BJ">BJ</option>
+            <option value="BV">BV</option>
+            <option value="Welcome">Welcome / JW</option>
+          </select>
+          <span class="filter-lbl" data-i18n="auditCompare">Compare</span>
+          <select class="fsel" id="audit-period-sel" onchange="setAuditPeriodFromSelect()">
+            <option value="day" data-i18n="auditDaily">Daily</option>
+            <option value="week" data-i18n="auditWeekly">Weekly</option>
+            <option value="month" selected data-i18n="auditMonthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-info" id="audit-compare-info" style="font-size:10px;color:var(--dim);font-family:var(--mono)">—</div>
+      <div id="audit-content"></div>
+    </div>
+
+    <!-- AUDIT: AGENT PROFILE -->
+    <div class="page" id="page-audit-profile">
+      <div class="ph-t" style="font-size:15px">🪪 <span data-i18n="auditAgentProfile">Agent Audit Profile</span></div>
+      <div style="max-width:480px">
+        <div class="ap-search-wrap" style="max-width:none">
+          <i class="fa-solid fa-magnifying-glass ap-search-icon"></i>
+          <input type="text" class="ap-search-input" id="ap-search-input" placeholder="Search agent name or PSD-ID…" autocomplete="off" oninput="apFilterDirectoryGrid()">
+        </div>
+      </div>
+      <div class="filter-info" id="ap-dir-count" style="font-size:10px;color:var(--dim);font-family:var(--mono)">—</div>
+      <div id="ap-directory-container" style="display:flex;flex-direction:column;gap:16px"></div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -818,6 +916,28 @@ body.light select option{background:#ffffff;color:#0c1e35}
     <div class="zoom-foot" id="zoom-foot">Press ESC or click outside to close</div>
   </div>
 </div>
+
+<!-- AGENT AUDIT PROFILE MODAL -->
+<div class="zoom-overlay" id="agent-profile-overlay" onclick="if(event.target===this)closeAgentProfileModal()">
+  <div class="zoom-box" style="width:min(1040px,94vw);height:min(820px,92vh)">
+    <div class="zoom-head">
+      <div class="zoom-title"><span>🪪</span><span id="ap-title-text">Agent Profile</span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select class="fsel" id="ap-month-sel" onchange="apSetMonthFilter(this.value)">
+          <option value="all">All Months</option>
+          <option value="Jan">January</option><option value="Feb">February</option><option value="Mar">March</option>
+          <option value="Apr">April</option><option value="May">May</option><option value="Jun">June</option>
+          <option value="Jul">July</option><option value="Aug">August</option><option value="Sep">September</option>
+          <option value="Oct">October</option><option value="Nov">November</option><option value="Dec">December</option>
+        </select>
+        <button class="zoom-close" onclick="closeAgentProfileModal()">✕</button>
+      </div>
+    </div>
+    <div class="zoom-body" id="ap-body"></div>
+    <div class="zoom-foot">Press ESC or click outside to close</div>
+  </div>
+</div>
+
 
 <script>
 // ── REGION / CURRENCY SWITCHING ──
@@ -838,9 +958,10 @@ var REGION_CONFIG={
       sla:'CX Internal SLA Metrics!A1:AD300',
       daily:'Daily Chat Report!A1:N5000',
       qa:'QA Error Diagnostics!A1:U1000',
-      slaOut:'Outsource SLA Metrics!A1:AD300'
+      slaOut:'Outsource SLA Metrics!A1:AD300',
+      profile:'CS Detail!A1:S500'
     },
-    tabNames:['Daily Chat Report','CX Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics'],
+    tabNames:['Daily Chat Report','CX Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail'],
     brands:['CX','MP','BJ','BV','Welcome'],
     brandLabels:{CX:'CX',MP:'MP',BJ:'BJ',BV:'BV',Welcome:'Welcome / JW'},
     brandColors:{CX:'#00b0ff',MP:'#9b7ff4',BJ:'#00e676',BV:'#ff9100',Welcome:'#ff4081'},
@@ -854,9 +975,10 @@ var REGION_CONFIG={
       sla:'Internal SLA Metrics!A1:AD300',
       daily:'Daily Chat Report!A1:AB5000',
       qa:'QA Error Diagnostics!A1:U1000',
-      slaOut:'Outsource SLA Metrics!A1:AD300'
+      slaOut:'Outsource SLA Metrics!A1:AD300',
+      profile:'CS Detail!A1:S500' // PLACEHOLDER — update once the PKR sheet/tab is uploaded
     },
-    tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics'],
+    tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail'],
     brands:['CX','MP','BJ','JW','DP','KV8','HB','SBJ','SP'],
     brandLabels:{CX:'CX',MP:'MP',BJ:'BJ',JW:'JW',DP:'DP',KV8:'KV8',HB:'HB',SBJ:'SBJ',SP:'SP'},
     brandColors:{CX:'#00b0ff',MP:'#9b7ff4',BJ:'#00e676',JW:'#ff4081',DP:'#ff9100',KV8:'#2dd4bf',HB:'#facc15',SBJ:'#f472b6',SP:'#60a5fa'},
@@ -901,7 +1023,7 @@ function applyRegionBrands_(region){
 // Automation) to match the active region's brand list, preserving the "All Brands"
 // first option.
 function rebuildBrandDropdowns_(){
-  ['f-brand','dr-brand','au-f-brand'].forEach(function(id){
+  ['f-brand','dr-brand','au-f-brand','audit-brand-sel'].forEach(function(id){
     var sel=document.getElementById(id);
     if(!sel) return;
     var allOpt=sel.querySelector('option[value="all"]');
@@ -981,15 +1103,17 @@ function filterVolData(d){
   });
 }
 
-var PAGES={overview:'Overview',daily:'Daily Report',sla:'SLA Metrics',peaks:'Peaks & Valleys',auto:'Automation Containment',qa:'QA Error Diagnostics'};
-var PAGES_ZH={overview:'总览',daily:'每日报告',sla:'SLA 指标',peaks:'峰值谷值',auto:'自动化遏制率',qa:'QA 错误诊断'};
+var PAGES={overview:'Overview',daily:'Daily Report',sla:'SLA Metrics',peaks:'Peaks & Valleys',auto:'Automation Containment',qa:'QA Error Diagnostics',audit:'Agent & Bot',"audit-profile":'Agent Audit Profile'};
+var PAGES_ZH={overview:'总览',daily:'每日报告',sla:'SLA 指标',peaks:'峰值谷值',auto:'自动化遏制率',qa:'QA 错误诊断',audit:'人工与机器人',"audit-profile":'坐席审计档案'};
 var PAGE_SUB={
   overview:'🏠 Live health check · Trends, no fixed targets · Internal + Outsource combined',
   daily:'📅 Day-by-day Agent vs Bot breakdown · Drill into any month',
   sla:'🎯 First response, resolution & handle time · Agent SLA performance',
   peaks:'📈 Agent chat volume trends · Weekly & Monthly by Brand',
   auto:'🤖 Bot vs Agent volume · Containment rate by brand & month',
-  qa:'🔴 Error counts by category · Internal vs Outsource'
+  qa:'🔴 Error counts by category · Internal vs Outsource',
+  audit:'📊 Period-over-period comparison · Agent vs Agent · Bot vs Bot',
+  "audit-profile":'🪪 Search any agent · Info, SLA, QA Errors & Handled Chats in one profile'
 };
 var PAGE_SUB_ZH={
   overview:'🏠 实时健康检查 · 趋势异动提醒,无固定目标 · 内部+外包合并',
@@ -997,7 +1121,9 @@ var PAGE_SUB_ZH={
   sla:'🎯 首次响应、处理时长与解决时长 · 坐席SLA表现',
   peaks:'📈 人工坐席聊天量趋势 · 按品牌周度/月度分析',
   auto:'🤖 机器人 vs 人工量 · 各品牌/月份遏制率',
-  qa:'🔴 各类错误数量统计 · 内部 vs 外包'
+  qa:'🔴 各类错误数量统计 · 内部 vs 外包',
+  audit:'📊 周期对比分析 · 人工对人工 · 机器人对机器人',
+  "audit-profile":'🪪 搜索坐席 · 一个面板看信息/SLA/QA错误/接单量'
 };
 
 // ── Translation object (was missing — caused toggleLang crash) ──────────
@@ -1059,7 +1185,16 @@ var T={
     tagTotalChat:'TOTAL CHAT',tagAllBrands2:'ALL BRANDS',tag2026Total:'2026 TOTAL',tag2026:'2026',
     tagAllMonths2:'ALL MONTHS',tagByBrand:'BY BRAND',tagCombined:'COMBINED',tagJanAvg:'JAN AVERAGE',
     tagPeakMonth2:'PEAK MONTH',tagPeakWeek2:'PEAK WEEK',tagRatio:'RATIO',tagSeconds:'SECONDS',
-    tagAgentsMet:'% AGENTS MET',tagAllErrorTypes:'ALL ERROR TYPES · INTERNAL + OUTSOURCE'
+    tagAgentsMet:'% AGENTS MET',tagAllErrorTypes:'ALL ERROR TYPES · INTERNAL + OUTSOURCE',
+    // Audit
+    auditSec:'Audit',auditCenter:'Audit Center',
+    auditMonthly:'MONTHLY',auditWeekly:'WEEKLY',auditDaily:'DAILY',
+    auditAgent:'Agent',auditBot:'Bot',
+    auditCompare:'Compare',auditVsPrev:'vs previous',
+    auditTotal:'Total',auditNoData:'Not enough data for this comparison yet.',
+    auditAgentBot:'Agent & Bot',
+    auditAgentProfile:'Agent Audit Profile',
+    auditProfileHint:'🔍 Search an agent by name or PSD-ID above to open their audit profile — Agent Info, SLA, QA Errors and Handled Chats all in one panel.'
   },
   zh:{
     chatVolume:'聊天量',dailyReport:'每日报告',slaMetrics:'SLA 指标',peaksValleys:'峰谷分析',
@@ -1118,7 +1253,16 @@ var T={
     // QA
     qaErrorBreakdown:'📊 错误类型分布',qaMonthlyTrend:'📈 月度错误趋势',
     qaAngry:'对玩家发怒',qaNoSolution:'无解决方案',qaNoExplanation:'无解释说明',
-    qaVerbal:'口头警告',qaWarningLetter:'书面警告'
+    qaVerbal:'口头警告',qaWarningLetter:'书面警告',
+    // Audit
+    auditSec:'审计',auditCenter:'审计中心',
+    auditMonthly:'月度',auditWeekly:'周度',auditDaily:'日度',
+    auditAgent:'人工',auditBot:'机器人',
+    auditCompare:'对比方式',auditVsPrev:'对比上一周期',
+    auditTotal:'总计',auditNoData:'数据量暂不足以进行该项对比。',
+    auditAgentBot:'人工与机器人',
+    auditAgentProfile:'坐席审计档案',
+    auditProfileHint:'🔍 在上方搜索坐席姓名或 PSD-ID,打开该坐席的审计档案——坐席信息、SLA、QA 错误与接单量全部集中在一个面板里。'
   }
 };
 
@@ -1185,7 +1329,7 @@ function toggleLang(){
   // Update active page title
   var activeNav=document.querySelector('.nav-item.active');
   if(activeNav){
-    var pageId=['vol','daily','sla','peaks','auto','qa'].find(function(id){
+    var pageId=['overview','daily','sla','peaks','auto','qa','audit','audit-profile'].find(function(id){
       return document.getElementById('page-'+id)&&document.getElementById('page-'+id).classList.contains('active');
     });
     if(pageId){
@@ -1195,7 +1339,7 @@ function toggleLang(){
     }
   }
   // Update sidebar labels
-  var navLabels={vol:'chatVolume',daily:'dailyReport',sla:'slaMetrics',peaks:'peaksValleys',auto:'automation',qa:'qaErrors'};
+  var navLabels={daily:'dailyReport',sla:'slaMetrics',peaks:'peaksValleys',auto:'automation',qa:'qaErrors'};
   document.querySelectorAll('.nav-item').forEach(function(el){
     var span=el.querySelector('span');
     if(!span)return;
@@ -1231,6 +1375,9 @@ function toggleLang(){
   if(searchEl) searchEl.placeholder=T[lang].searchCsName||'Search CS Name…';
   // Re-render Daily Report tags/labels
   if(drRaw) renderDailyReport(null);
+  // Re-render Audit tags/labels
+  if(document.getElementById('page-audit')&&document.getElementById('page-audit').classList.contains('active')) renderAudit();
+  if(document.getElementById('page-audit-profile')&&document.getElementById('page-audit-profile').classList.contains('active')) apFilterDirectoryGrid();
   // Re-render SLA tags/labels
   if(slaParsed) renderSLAMonth(slaParsed,slaMonth,slaWeek);
   // Re-render Automation tags/labels
@@ -1295,9 +1442,10 @@ function refreshClick(){
 function loadAll(){
   setSt('loading');
   var cfg=REGION_CONFIG[currentRegion];
-  var keys=['sla','daily','qa','slaOut'];
-  var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut];
+  var keys=['sla','daily','qa','slaOut','profile'];
+  var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut,cfg.ranges.profile];
   var promises=ranges.map(function(range,idx){
+    if(!range){ raw[keys[idx]]=[]; return Promise.resolve(); }
     return fetch_(range).then(function(r){
       raw[keys[idx]]=r;
     }).catch(function(e){
@@ -1308,7 +1456,9 @@ function loadAll(){
   return Promise.all(promises).then(function(){
     internalRoster=buildAgentRoster_(raw.sla);
     outsourceRoster=buildAgentRoster_(raw.slaOut);
+    AGENT_PROFILE_DATA=parseAgentProfileSheet(raw.profile);
     renderAll();
+    if(document.getElementById('page-audit-profile')&&document.getElementById('page-audit-profile').classList.contains('active')) apFilterDirectoryGrid();
     setSt('ok');
     document.getElementById('last-upd').textContent=(lang==='zh'?'\u66f4\u65b0\u4e8e ':'Updated: ')+new Date().toLocaleTimeString();
   }).catch(function(e){
@@ -1773,6 +1923,37 @@ function picInitials_(name){
 }
 
 var qaLogCache=[];
+
+// Builds the styled cells (subject pill, clickable Chat ID, clickable
+// Screenshot button, brand pill) for one QA log entry — shared by the main
+// QA Error Log table and the Agent Audit Profile modal's QA table, so both
+// look and behave identically.
+function buildQaRowCells_(r){
+  var dash='<span class="qa-dash">–</span>';
+  var shotCell=dash;
+  if(r.shot&&isUrl_(r.shot)){
+    shotCell='<button onclick="window.open(\''+r.shot.replace(/'/g,"\\'")+'\',\'_blank\')" style="background:var(--purple-d);border:1px solid rgba(155,127,244,0.3);color:var(--purple);font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;font-family:var(--font)"><i class="fa-solid fa-image"></i> '+(T[lang].viewScreenshot||'View Screenshot')+'</button>';
+  } else if(r.shot){
+    shotCell='<span style="color:var(--amber);font-size:10px" title="'+r.shot.replace(/"/g,'')+'">⚠ '+(T[lang].notALink||'not a link')+'</span>';
+  }
+  var brandCell=dash;
+  if(r.brand){
+    var isInternal=classifyQaTeam_(r)==='internal';
+    brandCell='<span class="brand-pill '+(isInternal?'internal':'outsource')+'">'+r.brand.toUpperCase()+'</span>';
+  }
+  var subjectCell=dash;
+  if(r.subject){
+    var kIdx=r.errKey?QA_KEYS.indexOf(r.errKey):-1;
+    var color=kIdx>=0?QA_COLORS[kIdx]:'#64748b';
+    var bg=kIdx>=0?color+'22':'rgba(100,116,139,0.14)';
+    subjectCell='<span class="err-pill" style="background:'+bg+';color:'+color+'">'+r.subject+'</span>';
+  }
+  var chatIdCell=r.chatid?r.chatid:dash;
+  if(r.chatid&&isUrl_(r.chatid)){
+    chatIdCell='<button onclick="window.open(\''+r.chatid.replace(/'/g,"\\'")+'\',\'_blank\')" style="background:var(--purple-d);border:1px solid rgba(155,127,244,0.3);color:var(--purple);font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;font-family:var(--font)"><i class="fa-solid fa-link"></i> '+(T[lang].openLink||'Open Link')+'</button>';
+  }
+  return {dash:dash,shotCell:shotCell,brandCell:brandCell,subjectCell:subjectCell,chatIdCell:chatIdCell};
+}
 function renderQALog(rowsArg){
   if(rowsArg!==undefined) qaLogCache=parseQALog(rowsArg);
   else if(raw.qa&&raw.qa.length) qaLogCache=parseQALog(raw.qa);
@@ -1800,41 +1981,14 @@ function renderQALog(rowsArg){
   }
   var dash='<span class="qa-dash">–</span>';
   tbody.innerHTML=data.map(function(r){
-    // Screenshot cell
-    var shotCell=dash;
-    if(r.shot&&isUrl_(r.shot)){
-      shotCell='<button onclick="window.open(\''+r.shot.replace(/'/g,"\\'")+'\',\'_blank\')" style="background:var(--purple-d);border:1px solid rgba(155,127,244,0.3);color:var(--purple);font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;font-family:var(--font)"><i class="fa-solid fa-image"></i> '+(T[lang].viewScreenshot||'View Screenshot')+'</button>';
-    } else if(r.shot){
-      shotCell='<span style="color:var(--amber);font-size:10px" title="'+r.shot.replace(/"/g,'')+'">⚠ '+(T[lang].notALink||'not a link')+'</span>';
-    }
-
-    // Brand pill — colored by the region's Internal/Outsource classification rule
-    var brandCell=dash;
-    if(r.brand){
-      var isInternal=classifyQaTeam_(r)==='internal';
-      brandCell='<span class="brand-pill '+(isInternal?'internal':'outsource')+'">'+r.brand.toUpperCase()+'</span>';
-    }
-
-    // Subject cell — colored pill matching the same palette as the error-type charts, falls back to plain text/dash
-    var subjectCell=dash;
-    if(r.subject){
-      var kIdx=r.errKey?QA_KEYS.indexOf(r.errKey):-1;
-      var color=kIdx>=0?QA_COLORS[kIdx]:'#64748b';
-      var bg=kIdx>=0?color+'22':'rgba(100,116,139,0.14)';
-      subjectCell='<span class="err-pill" style="background:'+bg+';color:'+color+'">'+r.subject+'</span>';
-    }
+    var cells=buildQaRowCells_(r);
+    var shotCell=cells.shotCell, brandCell=cells.brandCell, subjectCell=cells.subjectCell, chatIdCell=cells.chatIdCell;
 
     // PIC cell — colored initials avatar + name
     var picCell=dash;
     if(r.pic){
       var pc=picColor_(r.pic);
       picCell='<span class="pic-chip"><span class="pic-av" style="background:'+pc+'">'+picInitials_(r.pic)+'</span>'+r.pic+'</span>';
-    }
-
-    // Chat ID cell — if it's a URL (agents sometimes paste a link here instead of an ID), make it clickable too
-    var chatIdCell=r.chatid?r.chatid:dash;
-    if(r.chatid&&isUrl_(r.chatid)){
-      chatIdCell='<button onclick="window.open(\''+r.chatid.replace(/'/g,"\\'")+'\',\'_blank\')" style="background:var(--purple-d);border:1px solid rgba(155,127,244,0.3);color:var(--purple);font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;font-family:var(--font)"><i class="fa-solid fa-link"></i> '+(T[lang].openLink||'Open Link')+'</button>';
     }
 
     return '<tr>'+
@@ -2111,6 +2265,7 @@ function renderAll(){
     renderSLA(sp);
   }
   if(raw.daily&&raw.daily.length){var dp=parseDailyForPeaks(raw.daily);renderPeaks(dp);renderDailyReport(raw.daily);}
+  if(document.getElementById('page-audit')&&document.getElementById('page-audit').classList.contains('active')) renderAudit();
   if(raw.qa&&raw.qa.length){renderQA();}
   renderOverview();
 }
@@ -3339,7 +3494,7 @@ function showPage(id,nav){
   if(pgSubEl) pgSubEl.textContent=lang==='zh'?(PAGE_SUB_ZH[id]||''):(PAGE_SUB[id]||'');
   // Hide global filter bar on SLA page (SLA has its own filters)
   var fb=document.getElementById('global-filter-bar');
-  if(fb) fb.style.display=(id==='sla'||id==='auto'||id==='qa'||id==='daily'||id==='overview')?'none':'flex';
+  if(fb) fb.style.display=(id==='sla'||id==='auto'||id==='qa'||id==='daily'||id==='overview'||id==='audit'||id==='audit-profile')?'none':'flex';
   // Hide brand filter on QA page (QA data is not split by brand)
   var hideB=(id==='qa');
   var bfg=document.getElementById('brand-filter-group');
@@ -3712,6 +3867,672 @@ function renderDailyReport(rows){
 }
 // ── END DAILY REPORT ──────────────────────────────────────────────────────
 
+// ── AUDIT ────────────────────────────────────────────────────────────────
+// ── AUDIT ────────────────────────────────────────────────────────────────
+// NOTE: unlike the single-currency version this was ported from, brand lists
+// differ per region (INR has 5 brands, PKR has 9) and can change at runtime
+// when the user switches regions. So nothing here hardcodes a brand list —
+// everything reads the live DR_BRANDS / DR_COLORS / BRAND_LABELS globals
+// (kept in sync by applyRegionBrands_()) at render time.
+var auditPeriod='month', auditBrandFilter='all';
+
+function showAuditDomain(d,navEl){
+  var pageId=d==='agentprofile'?'audit-profile':'audit';
+  showPage(pageId,navEl);
+  if(d==='agentprofile'){
+    renderAgentDirectoryGrid('');
+  } else {
+    renderAudit();
+  }
+}
+
+function setAuditPeriodFromSelect(){
+  var sel=document.getElementById('audit-period-sel');
+  auditPeriod=sel?sel.value:'month';
+  renderAudit();
+}
+function setAuditBrandFromSelect(){
+  var sel=document.getElementById('audit-brand-sel');
+  auditBrandFilter=sel?sel.value:'all';
+  renderAudit();
+}
+
+function buildAuditMonthlyData(){
+  if(!drRaw||!drRaw.months) return [];
+  var out=[];
+  DR_MO_ORDER.forEach(function(mo){
+    var m=drRaw.months[mo];
+    if(!m) return;
+    var totalAg=DR_BRANDS.reduce(function(s,b){return s+(m.totAg[b]||0);},0);
+    var totalBot=DR_BRANDS.reduce(function(s,b){return s+(m.totBot[b]||0);},0);
+    if(totalAg+totalBot===0) return;
+    out.push({label:mo,ag:m.totAg,bot:m.totBot});
+  });
+  return out;
+}
+
+function buildAuditWeeklyData(){
+  if(!drRaw||!drRaw.months) return [];
+  var out=[];
+  DR_WEEK_PERIODS.forEach(function(wp){
+    var m=drRaw.months[wp.mo];
+    if(!m||!m.days.length) return;
+    var ag=zeroBrandObj_(DR_BRANDS), bot=zeroBrandObj_(DR_BRANDS);
+    var has=false;
+    m.days.forEach(function(d){
+      var dn=getDayNum(d.date);
+      if(dn===null||dn<wp.s||dn>wp.e) return;
+      DR_BRANDS.forEach(function(b){ag[b]+=(d['ag_'+b]||0);bot[b]+=(d['bt_'+b]||0);});
+      has=true;
+    });
+    if(!has) return;
+    var totalAg=DR_BRANDS.reduce(function(s,b){return s+ag[b];},0);
+    var totalBot=DR_BRANDS.reduce(function(s,b){return s+bot[b];},0);
+    if(totalAg+totalBot===0) return;
+    out.push({label:wp.w,ag:ag,bot:bot});
+  });
+  return out;
+}
+
+function buildAuditDailyData(){
+  if(!drRaw||!drRaw.months) return [];
+  var out=[];
+  DR_MO_ORDER.forEach(function(mo){
+    var m=drRaw.months[mo];
+    if(!m) return;
+    m.days.forEach(function(d){
+      var ag={}, bot={};
+      DR_BRANDS.forEach(function(b){ag[b]=d['ag_'+b]||0;bot[b]=d['bt_'+b]||0;});
+      var totalAg=DR_BRANDS.reduce(function(s,b){return s+ag[b];},0);
+      var totalBot=DR_BRANDS.reduce(function(s,b){return s+bot[b];},0);
+      if(totalAg+totalBot===0) return;
+      out.push({label:d.date,ag:ag,bot:bot});
+    });
+  });
+  return out;
+}
+
+// Returns the current region's brand list as {key,name,color} objects — built
+// fresh on every call so a region switch (different brand count/colors) is
+// always reflected immediately.
+function getAuditBrandMeta(){
+  return DR_BRANDS.map(function(b){
+    return {key:b,name:BRAND_LABELS[b]||b,color:DR_COLORS[b]||'#64748b'};
+  });
+}
+
+function renderAuditUnifiedTable(container,data,visibleBrands,periodLbl,T_){
+  var n=visibleBrands.length;
+  var colCount=1+n*2;
+  var theadHtml='<thead style="position:sticky;top:0;z-index:10">'+
+    '<tr>'+
+      '<th rowspan="2" style="position:sticky;left:0;z-index:20;background:#0d1525;padding:10px 16px;text-align:left;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border2);border-right:1px solid var(--border2);min-width:120px;vertical-align:middle">'+T_.month+'</th>'+
+      '<th colspan="'+n+'" style="text-align:center;padding:10px 8px;font-size:10px;font-weight:700;letter-spacing:.07em;color:#00e676;background:#091a10;border-bottom:2px solid #00e676;border-right:1px solid var(--border2)">\ud83d\udc64 '+T_.auditAgent.toUpperCase()+'</th>'+
+      '<th colspan="'+n+'" style="text-align:center;padding:10px 8px;font-size:10px;font-weight:700;letter-spacing:.07em;color:#9b7ff4;background:#13102a;border-bottom:2px solid #9b7ff4">\ud83e\udd16 '+T_.auditBot.toUpperCase()+'</th>'+
+    '</tr><tr>';
+  visibleBrands.forEach(function(b,i){
+    var last=i===n-1;
+    theadHtml+='<th style="padding:7px 14px;color:#00e676;background:#091a10;font-size:10px;font-weight:700;border-right:'+(last?'2px solid var(--border2)':'1px solid rgba(255,255,255,0.04)')+'">'+b.name+'</th>';
+  });
+  visibleBrands.forEach(function(b,i){
+    var last=i===n-1;
+    theadHtml+='<th style="padding:7px 14px;color:#9b7ff4;background:#13102a;font-size:10px;font-weight:700;'+(last?'':'border-right:1px solid rgba(255,255,255,0.04)')+'">'+b.name+'</th>';
+  });
+  theadHtml+='</tr></thead>';
+
+  var tdAg='style="padding:9px 14px;color:#00e676;border-bottom:1px solid rgba(255,255,255,0.03)"';
+  var tdBot='style="padding:9px 14px;color:#9b7ff4;border-bottom:1px solid rgba(255,255,255,0.03)"';
+  var tbodyHtml='<tbody>';
+  var totals={};
+  visibleBrands.forEach(function(b){totals[b.key]={ag:0,bot:0};});
+  data.forEach(function(row){
+    tbodyHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,0.03)" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'\'">'+
+      '<td style="position:sticky;left:0;z-index:5;background:#0a0d16;padding:9px 16px;font-weight:600;color:var(--text);white-space:nowrap;border-right:1px solid var(--border2)">'+row.label+'</td>';
+    visibleBrands.forEach(function(b){var v=row.ag[b.key]||0;totals[b.key].ag+=v;tbodyHtml+='<td '+tdAg+'>'+fn(v)+'</td>';});
+    visibleBrands.forEach(function(b){var v=row.bot[b.key]||0;totals[b.key].bot+=v;tbodyHtml+='<td '+tdBot+'>'+fn(v)+'</td>';});
+    tbodyHtml+='</tr>';
+  });
+  tbodyHtml+='<tr style="background:rgba(0,176,255,0.08);border-top:2px solid var(--teal);position:sticky;bottom:0">'+
+    '<td style="position:sticky;left:0;z-index:6;background:#0a2438;padding:10px 16px;color:var(--teal);font-weight:800;font-size:11px;letter-spacing:.05em;border-right:1px solid var(--border2)">'+T_.auditTotal.toUpperCase()+'</td>';
+  visibleBrands.forEach(function(b){tbodyHtml+='<td style="padding:10px 14px;color:var(--teal);font-weight:800">'+fn(totals[b.key].ag)+'</td>';});
+  visibleBrands.forEach(function(b){tbodyHtml+='<td style="padding:10px 14px;color:var(--teal);font-weight:800">'+fn(totals[b.key].bot)+'</td>';});
+  tbodyHtml+='</tr></tbody>';
+
+  return(
+    '<div class="panel" style="overflow:hidden">'+
+      '<div class="ph"><div class="ph-t">\ud83d\udccb '+T_.auditAgent+' / '+T_.auditBot+'</div><div class="ph-tag">'+periodLbl+' \u00b7 '+data.length+'</div></div>'+
+      '<div style="overflow:auto;max-height:560px"><table style="width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono)">'+theadHtml+tbodyHtml+'</table></div>'+
+    '</div>'
+  );
+}
+
+function toggleAuditChartCollapse(key,btn){
+  var wrap=document.getElementById('audit-chart-wrap-'+key);
+  if(!wrap) return;
+  var isCollapsed=wrap.style.display==='none';
+  wrap.style.display=isCollapsed?'block':'none';
+  if(btn) btn.textContent=isCollapsed?'▲ Collapse':'▶ Expand';
+}
+
+function renderAuditByBrand(container,data,periodLbl){
+  var T_=T[lang];
+  var allBrandMeta=getAuditBrandMeta();
+  var visibleBrands=auditBrandFilter==='all'?allBrandMeta:allBrandMeta.filter(function(b){return b.key===auditBrandFilter;});
+  var isDense=auditPeriod==='day'; // collapse dense daily charts by default
+  var html='';
+  visibleBrands.forEach(function(b){
+    html+=
+      '<div class="aud-brand-block">'+
+        '<div class="aud-brand-head"><span class="aud-brand-dot" style="background:'+b.color+'"></span><span class="aud-brand-name">'+b.name+'</span>'+
+          (isDense?'<button class="lb-btn" style="margin-left:auto;margin-right:8px" onclick="toggleAuditChartCollapse(\''+b.key+'\',this)">▶ Expand</button>':'')+
+          '<span class="ph-tag"'+(isDense?'':' style="margin-left:auto"')+'>'+periodLbl+'</span>'+
+        '</div>'+
+        '<div class="aud-brand-body">'+
+          '<div id="audit-chart-wrap-'+b.key+'" style="display:'+(isDense?'none':'block')+'">'+
+            '<div class="zoomable panel" style="position:relative;height:200px;padding:10px 12px;border:none" ondblclick="zoomPanel(\'chart\',\'audit-brand-'+b.key+'-chart\',\''+b.name+' \u2014 '+T_.auditAgent+' vs '+T_.auditBot+'\',\''+periodLbl+'\')">'+
+              '<canvas id="audit-brand-'+b.key+'-chart"></canvas>'+
+              '<span class="zoom-hint">⤢ Double-click to enlarge</span>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+  });
+  var tableHtml=renderAuditUnifiedTable(container,data,visibleBrands,periodLbl,T_);
+  container.innerHTML=tableHtml+'<div style="margin-top:18px">'+html+'</div>';
+
+  visibleBrands.forEach(function(b){
+    var canvasId='audit-brand-'+b.key+'-chart';
+    var ctx=document.getElementById(canvasId);
+    if(!ctx) return;
+    if(charts[canvasId]){charts[canvasId].destroy();}
+    var labels=data.map(function(r){return r.label;});
+    charts[canvasId]=new Chart(ctx.getContext('2d'),{
+      type:'line',
+      data:{
+        labels:labels,
+        datasets:[
+          {label:T_.auditAgent,data:data.map(function(r){return r.ag[b.key]||0;}),borderColor:'#00b0ff',backgroundColor:'#00b0ff',tension:.35,pointRadius:3,pointBackgroundColor:'#00b0ff',borderWidth:2,fill:false},
+          {label:T_.auditBot,data:data.map(function(r){return r.bot[b.key]||0;}),borderColor:'#9b7ff4',backgroundColor:'#9b7ff4',tension:.35,pointRadius:3,pointBackgroundColor:'#9b7ff4',borderWidth:2,fill:false}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{color:CC.tick,font:{size:9},boxWidth:8}},
+          tooltip:CC.tt
+        },
+        scales:{
+          x:{grid:{color:CC.grid},ticks:{color:CC.tick,font:{size:8}}},
+          y:{grid:{color:CC.grid},ticks:{color:CC.tick,font:{size:8},callback:function(v){return fn(v);}}}
+        }
+      }
+    });
+  });
+}
+
+function renderAudit(){
+  var contentEl=document.getElementById('audit-content');
+  var infoEl=document.getElementById('audit-compare-info');
+  var periodSelEl=document.getElementById('audit-period-sel');
+  var domainTitleEl=document.getElementById('audit-domain-title');
+  var periodWrapEl=periodSelEl?periodSelEl.parentElement:null;
+  if(!contentEl) return;
+  var T_=T[lang];
+  var periodLbl={day:T_.auditDaily,week:T_.auditWeekly,month:T_.auditMonthly}[auditPeriod];
+
+  if(domainTitleEl) domainTitleEl.textContent='👤🤖 '+T_.auditAgentBot;
+  if(periodWrapEl) periodWrapEl.style.display='flex';
+
+  var data;
+  if(auditPeriod==='month') data=buildAuditMonthlyData();
+  else if(auditPeriod==='week') data=buildAuditWeeklyData();
+  else data=buildAuditDailyData();
+
+  if(!data||data.length<2){
+    contentEl.innerHTML='<div class="aud-empty">'+T_.auditNoData+'</div>';
+    if(infoEl) infoEl.textContent='';
+    return;
+  }
+  var latest=data[data.length-1], prev=data[data.length-2];
+  if(infoEl) infoEl.textContent=T_.auditCompare+': '+latest.label+' '+T_.auditVsPrev+' '+prev.label;
+
+  renderAuditByBrand(contentEl,data,periodLbl);
+}
+// ── END AUDIT ────────────────────────────────────────────────────────────
+
+// ── AGENT AUDIT PROFILE ─────────────────────────────────────────────────
+// ── AGENT AUDIT PROFILE ─────────────────────────────────────────────────
+// Parses the "CS Detail" sheet — two side-by-side blocks (Internal CS / Outsource)
+// sharing the same row range. Layout per the sheet you shared:
+//   Row 1: merged section labels ("Internal CS", "Outsource") mark where each block starts
+//   Row 2: column headers — each block has its own "PSD ID" column; we auto-detect
+//          Name / Photo link / Project / Perfomance / TASK / Reamark columns by
+//          header text (case-insensitive, tolerant of the sheet's own typos)
+//          relative to each "PSD ID" column, so this doesn't break if a column
+//          shifts or a region's block is missing a field (e.g. Outsource has no
+//          Photo link column — that's expected, not a bug: falls back to the
+//          initials avatar automatically).
+//   Data rows: PSD ID / Name / Photo link / Project / Perfomance are only filled
+//          on the first row of each agent's block (merged cells) — TASK / Reamark
+//          repeat for every task row until the next agent's PSD ID appears.
+var AGENT_PROFILE_DATA={};
+
+// Normalizes a PSD-ID for matching/deduping across sheets that format it
+// differently (e.g. "CG-39188" vs "CG 39188" vs "cg39188" are all the same
+// person) — strips everything but letters/digits, then uppercases.
+function normPsd_(s){
+  return String(s||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+}
+
+function normalizePhotoUrl_(u){
+  u=String(u||'').trim();
+  if(!u) return '';
+  if(u.indexOf('//')===0) return 'https:'+u; // protocol-relative link → force https
+  return u;
+}
+
+function parseAgentProfileSheet(rows){
+  var out={};
+  if(!rows||!rows.length) return out;
+
+  // Section labels (row 1) tell us which PSD-ID column belongs to Internal vs Outsource
+  var sectionRow=rows[0]||[];
+  var sectionStarts=[];
+  sectionRow.forEach(function(c,i){
+    var t=String(c||'').trim();
+    if(t) sectionStarts.push({col:i,label:t});
+  });
+  function teamForCol_(col){
+    var best=null;
+    sectionStarts.forEach(function(s){ if(s.col<=col&&(!best||s.col>best.col)) best=s; });
+    return (best&&/outsource/i.test(best.label))?'Outsource':'Internal';
+  }
+
+  // Find the header row — the one containing a "PSD ID" cell (usually row 2)
+  var headerIdx=-1,headerRow=null;
+  for(var i=0;i<Math.min(rows.length,6);i++){
+    var r=rows[i]||[];
+    if(r.some(function(c){return /psd\s*id/i.test(String(c||''));})){headerIdx=i;headerRow=r;break;}
+  }
+  if(headerIdx<0) return out;
+
+  // Every "PSD ID" cell in the header row marks the start of one block (Internal / Outsource)
+  var psdCols=[];
+  headerRow.forEach(function(c,i){ if(/psd\s*id/i.test(String(c||''))) psdCols.push(i); });
+  if(!psdCols.length) return out;
+
+  psdCols.forEach(function(psdCol,bi){
+    var blockEnd=(bi+1<psdCols.length)?psdCols[bi+1]:headerRow.length;
+    var scanStart=Math.max(0,psdCol-2); // the index/number column usually sits just before PSD ID
+    var cols={psd:psdCol};
+    for(var c=scanStart;c<blockEnd;c++){
+      var h=String(headerRow[c]||'').trim().toLowerCase();
+      if(!h) continue;
+      if(h.indexOf('name')>=0&&cols.name===undefined) cols.name=c;
+      else if(h.indexOf('photo')>=0&&cols.photo===undefined) cols.photo=c;
+      else if(h.indexOf('project')>=0&&cols.project===undefined) cols.project=c;
+      else if(h.indexOf('perfo')>=0&&cols.perf===undefined) cols.perf=c;
+      else if(h.indexOf('task')>=0&&cols.task===undefined) cols.task=c;
+      else if((h.indexOf('remark')>=0||h.indexOf('reamark')>=0)&&cols.remark===undefined) cols.remark=c;
+    }
+    var team=teamForCol_(psdCol);
+    var current=null;
+    var flush=function(){
+      if(!current) return;
+      if(!current.name&&!current.psdId) return;
+      var key=current.psdId?normPsd_(current.psdId):current.name.trim().toUpperCase();
+      out[key]=current;
+    };
+    for(var r2=headerIdx+1;r2<rows.length;r2++){
+      var row=rows[r2]||[];
+      var psdVal=String(row[cols.psd]||'').trim();
+      var nameVal=cols.name!==undefined?String(row[cols.name]||'').trim():'';
+      if(psdVal||nameVal){
+        flush();
+        current={
+          psdId:psdVal,name:nameVal,team:team,
+          photo:cols.photo!==undefined?normalizePhotoUrl_(row[cols.photo]):'',
+          project:cols.project!==undefined?String(row[cols.project]||'').trim():'',
+          performance:cols.perf!==undefined?String(row[cols.perf]||'').trim():'',
+          tasks:[]
+        };
+      }
+      if(current){
+        var taskVal=cols.task!==undefined?String(row[cols.task]||'').trim():'';
+        var remarkVal=cols.remark!==undefined?String(row[cols.remark]||'').trim():'';
+        if(taskVal||remarkVal) current.tasks.push({task:taskVal,remark:remarkVal});
+      }
+    }
+    flush();
+  });
+  return out;
+}
+
+// Builds the searchable agent directory by merging real SLA agents (all
+// months, both Internal + Outsource) with any AGENT_PROFILE_DATA-only entries,
+// keyed by PSD-ID when available (falls back to name).
+function buildAgentDirectory(){
+  var dir={};
+  if(slaParsed&&slaParsed.months){
+    Object.keys(slaParsed.months).forEach(function(mo){
+      Object.values(slaParsed.months[mo].agents||{}).forEach(function(a){
+        var idKey=(a.psdId&&a.psdId.trim())?normPsd_(a.psdId):a.name.trim().toUpperCase();
+        if(!dir[idKey]) dir[idKey]={key:idKey,name:a.name,psdId:a.psdId||'',team:a.team||'CX'};
+      });
+    });
+  }
+  Object.keys(AGENT_PROFILE_DATA).forEach(function(rawKey){
+    var p=AGENT_PROFILE_DATA[rawKey];
+    var idKey=(p.psdId&&p.psdId.trim())?normPsd_(p.psdId):p.name.trim().toUpperCase();
+    if(!dir[idKey]){
+      dir[idKey]={key:idKey,name:p.name,psdId:p.psdId||rawKey,team:p.team==='Outsource'?'Outsource':'CX'};
+    } else if(p.name&&p.name.length>dir[idKey].name.length){
+      // Same person, matched by normalized PSD-ID across both sheets — keep
+      // whichever name is more descriptive (e.g. "Name (Nickname)")
+      dir[idKey].name=p.name;
+    }
+  });
+  return dir;
+}
+
+// Aggregates one agent's SLA data across all months (Internal + Outsource
+// already merged into slaParsed). Shared by both the directory grid (quick
+// stat line) and the full profile modal (KPI row + trend chart).
+function aggregateAgentSLA(identity,monthFilter){
+  monthFilter=monthFilter||'all';
+  var monthly=[];
+  var totalChats=0, frtVals=[], mrtVals=[], ahtVals=[], csatVals=[];
+  if(slaParsed&&slaParsed.months){
+    DR_MO_ORDER.forEach(function(mo){
+      if(monthFilter!=='all'&&mo!==monthFilter) return;
+      var m=slaParsed.months[mo];
+      if(!m) return;
+      var found=Object.values(m.agents||{}).find(function(a){
+        if(identity.psdId) return normPsd_(a.psdId)===normPsd_(identity.psdId);
+        return a.name.trim().toUpperCase()===identity.name.trim().toUpperCase();
+      });
+      if(!found) return;
+      monthly.push({month:mo,chats:found.chats||0,frt:found.frt||0,mrt:found.mrt||0,aht:found.aht||0,csat:found.csat||0});
+      totalChats+=found.chats||0;
+      if(found.frt>0) frtVals.push(found.frt);
+      if(found.mrt>0) mrtVals.push(found.mrt);
+      if(found.aht>0) ahtVals.push(found.aht);
+      if(found.csat>0) csatVals.push(found.csat);
+    });
+  }
+  return{
+    monthly:monthly,totalChats:totalChats,
+    avgFrt:frtVals.length?Math.round(av(frtVals)):0,
+    avgMrt:mrtVals.length?Math.round(av(mrtVals)):0,
+    avgAht:ahtVals.length?Math.round(av(ahtVals)):0,
+    avgCsat:csatVals.length?av(csatVals):0
+  };
+}
+
+// Renders every agent in the directory as a clickable card (optionally
+// filtered by the search box) so the whole roster is browsable at a glance —
+// the search box just narrows it down, it isn't the only way in.
+// Renders one card for a single agent — shared by both the Internal and
+// Outsource panels below.
+function renderAgentDirCard_(a){
+  var profile=AGENT_PROFILE_DATA[normPsd_(a.psdId)]||AGENT_PROFILE_DATA[a.name.trim().toUpperCase()]||null;
+  var avatarHtml;
+  if(profile&&profile.photo){
+    avatarHtml='<img class="ap-dir-avatar" src="'+profile.photo+'" alt="'+a.name+'" onerror="this.outerHTML=\'<div class=&quot;ap-dir-avatar-fallback&quot; style=&quot;background:'+picColor_(a.name)+'&quot;>'+picInitials_(a.name)+'</div>\'">';
+  } else {
+    avatarHtml='<div class="ap-dir-avatar-fallback" style="background:'+picColor_(a.name)+'">'+picInitials_(a.name)+'</div>';
+  }
+  var teamLbl=a.team==='Outsource'?(lang==='zh'?'外包':'Outsource'):(lang==='zh'?'内部':'Internal');
+  var quick=aggregateAgentSLA(a);
+  var statLbl=quick.totalChats?fn(quick.totalChats)+(lang==='zh'?' 单':' chats'):(lang==='zh'?'暂无数据':'no data yet');
+  return '<div class="ap-dir-card" onclick="openAgentProfile(\''+a.key.replace(/'/g,"\\'")+'\')">'+
+    avatarHtml+
+    '<div class="ap-dir-info">'+
+      '<div class="ap-dir-name">'+a.name+'</div>'+
+      '<div class="ap-dir-meta"><span>'+(a.psdId||'—')+'</span><span>·</span><span>'+teamLbl+'</span></div>'+
+      '<div class="ap-dir-stat">'+statLbl+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// Renders one team panel (Internal or Outsource) — a titled card with its own
+// count badge, containing the grid of that team's agent cards.
+function renderAgentDirPanel_(titleEmoji,titleText,colorVar,list){
+  var body=list.length?
+    '<div class="ap-directory-grid">'+list.map(renderAgentDirCard_).join('')+'</div>':
+    '<div class="ap-suggest-empty">'+(lang==='zh'?'没有匹配的坐席':'No matching agent')+'</div>';
+  return '<div class="panel" style="border-left:3px solid '+colorVar+'">'+
+    '<div class="ph"><div class="ph-t">'+titleEmoji+' '+titleText+'</div><div class="ph-tag">'+list.length+(lang==='zh'?' 位':' agents')+'</div></div>'+
+    '<div class="pb">'+body+'</div>'+
+  '</div>';
+}
+
+function renderAgentDirectoryGrid(query){
+  var container=document.getElementById('ap-directory-container');
+  var countEl=document.getElementById('ap-dir-count');
+  if(!container) return;
+  var q=(query||'').trim().toLowerCase();
+  var dir=buildAgentDirectory();
+  var all=Object.values(dir).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var list=q?all.filter(function(a){
+    return a.name.toLowerCase().indexOf(q)>=0||(a.psdId&&a.psdId.toLowerCase().indexOf(q)>=0);
+  }):all;
+
+  if(countEl) countEl.textContent=list.length+(lang==='zh'?' 位坐席':' agents')+(q?(lang==='zh'?' · 已筛选':' · filtered'):'');
+
+  var internalList=list.filter(function(a){return a.team!=='Outsource';});
+  var outsourceList=list.filter(function(a){return a.team==='Outsource';});
+
+  container.innerHTML=
+    renderAgentDirPanel_('🟢',isZh_()?'内部坐席 · Internal CS':'Internal CS','var(--green)',internalList)+
+    renderAgentDirPanel_('🟠',isZh_()?'外包坐席 · Outsource CS':'Outsource CS','var(--amber)',outsourceList);
+}
+function isZh_(){return lang==='zh';}
+
+function apFilterDirectoryGrid(){
+  var input=document.getElementById('ap-search-input');
+  renderAgentDirectoryGrid(input?input.value:'');
+}
+
+var apChart=null;
+var apCurrentAgentKey=null;
+var apMonthFilter='all';
+
+function openAgentProfile(key){
+  var dir=buildAgentDirectory();
+  if(!dir[key]) return;
+  apCurrentAgentKey=key;
+  apMonthFilter='all';
+  var monthSel=document.getElementById('ap-month-sel');
+  if(monthSel) monthSel.value='all';
+  var input=document.getElementById('ap-search-input'); if(input) input.value=dir[key].name;
+  renderCurrentAgentProfile_();
+}
+
+function apSetMonthFilter(val){
+  apMonthFilter=val||'all';
+  renderCurrentAgentProfile_();
+}
+
+// Re-computes and re-renders the currently open agent's profile using the
+// active month filter — called on first open and every time the month
+// dropdown in the modal header changes.
+function renderCurrentAgentProfile_(){
+  if(!apCurrentAgentKey) return;
+  var dir=buildAgentDirectory();
+  var identity=dir[apCurrentAgentKey];
+  if(!identity) return;
+
+  var slaAgg=aggregateAgentSLA(identity,apMonthFilter);
+
+  // ── QA errors for this agent (match by PSD-ID first, fall back to name), optionally narrowed to one month ──
+  var qaEntries=(qaLogCache||[]).filter(function(r){
+    var psdMatch=identity.psdId&&r.psd&&normPsd_(r.psd)===normPsd_(identity.psdId);
+    var nameMatch=r.cs&&r.cs.trim().toUpperCase()===identity.name.trim().toUpperCase();
+    if(!(psdMatch||nameMatch)) return false;
+    if(apMonthFilter!=='all'){
+      var mo=qaEntryMonth_(r.date);
+      if(mo!==apMonthFilter) return false;
+    }
+    return true;
+  });
+
+  // ── Profile sheet data — from the real "CS Detail" tab (AGENT_PROFILE_DATA) ──
+  var profile=AGENT_PROFILE_DATA[normPsd_(identity.psdId)]||AGENT_PROFILE_DATA[identity.name.trim().toUpperCase()]||null;
+
+  renderAgentProfileModal(identity,slaAgg,qaEntries,profile);
+}
+
+function renderAgentProfileModal(identity,slaAgg,qaEntries,profile){
+  var titleEl=document.getElementById('ap-title-text');
+  var body=document.getElementById('ap-body');
+  var overlay=document.getElementById('agent-profile-overlay');
+  if(!body||!overlay) return;
+  if(titleEl) titleEl.textContent=identity.name+' — '+(lang==='zh'?'坐席审计档案':'Agent Audit Profile');
+
+  var isZh=lang==='zh';
+  var teamLbl=identity.team==='Outsource'?(isZh?'外包':'Outsource'):(isZh?'内部':'Internal');
+
+  // Photo or initials fallback
+  var photoHtml;
+  if(profile&&profile.photo){
+    photoHtml='<img class="ap-photo" src="'+profile.photo+'" alt="'+identity.name+'" onerror="this.outerHTML=\'<div class=&quot;ap-photo-fallback&quot; style=&quot;background:'+picColor_(identity.name)+'&quot;>'+picInitials_(identity.name)+'</div>\'">';
+  } else {
+    photoHtml='<div class="ap-photo-fallback" style="background:'+picColor_(identity.name)+'">'+picInitials_(identity.name)+'</div>';
+  }
+
+  var perfKeyRaw=profile&&profile.performance?profile.performance.trim().toLowerCase():'';
+  var perfCls=perfKeyRaw.indexOf('good')>=0?'good':(perfKeyRaw.indexOf('bad')>=0||perfKeyRaw.indexOf('poor')>=0?'bad':(perfKeyRaw?'average':''));
+  var perfColor=perfCls==='good'?'var(--green)':perfCls==='bad'?'var(--red)':perfCls==='average'?'var(--amber)':'var(--muted)';
+
+  // Plain "Label: Value" text lines — PSD-ID / Team / Project / Performance,
+  // aligned into two columns (fixed-width label + value) so they line up.
+  var textInfo=
+    '<div class="ap-text-info">'+
+      '<div class="ap-text-info-line"><span class="ap-text-info-lbl">'+(isZh?'PSD 编号':'PSD ID')+'</span><b>'+(identity.psdId||'—')+'</b></div>'+
+      '<div class="ap-text-info-line"><span class="ap-text-info-lbl">'+(isZh?'团队':'CS')+'</span><b>'+teamLbl+'</b></div>'+
+      '<div class="ap-text-info-line"><span class="ap-text-info-lbl">'+(isZh?'项目':'Project')+'</span><b>'+(profile&&profile.project?profile.project:'—')+'</b></div>'+
+      '<div class="ap-text-info-line"><span class="ap-text-info-lbl">'+(isZh?'表现':'Performance')+'</span><b style="color:'+perfColor+'">'+(profile&&profile.performance?profile.performance:'—')+'</b></div>'+
+    '</div>';
+
+  var headerLeft=
+    '<div class="ap-header-left">'+
+      photoHtml+
+      '<div style="min-width:0">'+
+        '<div style="font-size:17px;font-weight:800;color:var(--text)">'+identity.name+'</div>'+
+        textInfo+
+      '</div>'+
+    '</div>';
+
+  // Task List / Remark — two separate cells, side by side.
+  // Rows where the field itself is blank in the sheet are skipped entirely
+  // (no "—" placeholder bullet) rather than shown as an empty list item.
+  var tasksWithText=(profile&&profile.tasks)?profile.tasks.filter(function(t){return t.task&&t.task.trim();}):[];
+  var remarksWithText=(profile&&profile.tasks)?profile.tasks.filter(function(t){return t.remark&&t.remark.trim();}):[];
+  var taskListHtml=tasksWithText.length?
+    '<ul class="ap-cell-list">'+tasksWithText.map(function(t){return '<li>'+t.task+'</li>';}).join('')+'</ul>':
+    '<span style="color:var(--muted);font-size:11px">—</span>';
+  var remarkListHtml=remarksWithText.length?
+    '<ul class="ap-cell-list">'+remarksWithText.map(function(t){return '<li>'+t.remark+'</li>';}).join('')+'</ul>':
+    '<span style="color:var(--muted);font-size:11px">—</span>';
+  var cellRow=
+    '<div class="ap-cellrow">'+
+      '<div class="ap-cell"><div class="ap-cell-lbl">'+(isZh?'任务列表 · TASK LIST':'TASK LIST')+'</div>'+taskListHtml+'</div>'+
+      '<div class="ap-cell"><div class="ap-cell-lbl">'+(isZh?'备注 · REMARK':'REMARK')+'</div>'+remarkListHtml+'</div>'+
+    '</div>';
+
+  var profileHint=profile?'':'<div style="font-size:10px;color:var(--dim);margin-top:12px;font-style:italic">'+(isZh?'（该坐席在 "CS Detail" 表中未匹配到记录 — 请检查 PSD-ID / 姓名拼写是否一致）':'(no matching row found in the "CS Detail" sheet for this agent — check PSD-ID / name spelling)')+'</div>';
+
+  var header=
+    '<div class="panel" style="margin-bottom:18px">'+
+      '<div class="ph"><div class="ph-t">🪪 '+(isZh?'坐席信息':'Agent Info')+'</div></div>'+
+      '<div class="pb">'+
+        '<div class="ap-header-row">'+
+          headerLeft+
+          cellRow+
+        '</div>'+
+        profileHint+
+      '</div>'+
+    '</div>';
+
+  // KPI grid — 6 cards
+  var kpi=
+    '<div class="kpi-grid g6" style="margin-bottom:18px">'+
+      '<div class="kpi c-teal"><div class="kpi-lbl">'+(isZh?'总接单量':'Total Chats')+'</div><div class="kpi-val">'+fn(slaAgg.totalChats)+'</div></div>'+
+      '<div class="kpi c-purple"><div class="kpi-lbl">'+(isZh?'平均首响':'Avg FRT')+'</div><div class="kpi-val">'+(slaAgg.avgFrt||'—')+'</div></div>'+
+      '<div class="kpi c-purple"><div class="kpi-lbl">'+(isZh?'平均回复':'Avg MRT')+'</div><div class="kpi-val">'+(slaAgg.avgMrt||'—')+'</div></div>'+
+      '<div class="kpi c-amber"><div class="kpi-lbl">'+(isZh?'平均处理':'Avg AHT')+'</div><div class="kpi-val">'+(slaAgg.avgAht||'—')+'</div></div>'+
+      '<div class="kpi c-green"><div class="kpi-lbl">'+(isZh?'平均CSAT':'Avg CSAT')+'</div><div class="kpi-val">'+(slaAgg.avgCsat?slaAgg.avgCsat.toFixed(1):'—')+'</div></div>'+
+      '<div class="kpi c-red"><div class="kpi-lbl">'+(isZh?'QA错误数':'QA Errors')+'</div><div class="kpi-val">'+qaEntries.length+'</div></div>'+
+    '</div>';
+
+  // Monthly trend chart
+  var chartPanel='<div class="panel ap-chart-panel" style="margin-bottom:18px"><div class="ph"><div class="ph-t">'+(isZh?'📈 月度接单量 / 首响趋势':'📈 Monthly Chats / FRT Trend')+'</div></div><div class="cw"><canvas id="ap-chart"></canvas></div></div>';
+
+  // QA error table — same look & behavior as the main QA Error Log
+  // (clickable Chat ID / Screenshot buttons, colored Subject/Brand pills),
+  // built with the same shared buildQaRowCells_() helper.
+  var qaSection;
+  if(qaEntries.length){
+    var dashQ='<span class="qa-dash">–</span>';
+    var rows=qaEntries.map(function(r){
+      var cells=buildQaRowCells_(r);
+      return '<tr>'+
+        '<td style="white-space:nowrap">'+(r.date||dashQ)+'</td>'+
+        '<td style="white-space:normal;max-width:220px;font-family:var(--font)">'+cells.subjectCell+'</td>'+
+        '<td style="white-space:nowrap">'+cells.chatIdCell+'</td>'+
+        '<td>'+cells.shotCell+'</td>'+
+        '<td style="white-space:normal;max-width:260px;font-family:var(--font)">'+(r.remark||dashQ)+'</td>'+
+        '<td style="white-space:nowrap">'+cells.brandCell+'</td>'+
+      '</tr>';
+    }).join('');
+    qaSection='<div class="panel"><div class="ph"><div class="ph-t">'+(isZh?'🔴 QA 错误记录':'🔴 QA Error Records')+'</div><div class="ph-tag">'+qaEntries.length+'</div></div>'+
+      '<div style="overflow:auto;max-height:280px"><table class="dt"><thead><tr>'+
+        '<th>'+(isZh?'日期':'Date')+'</th><th>'+(isZh?'类型':'Subject')+'</th><th>'+(isZh?'聊天ID':'Chat ID')+'</th><th>'+(T[lang].screenshot||'Screenshot')+'</th><th>'+(isZh?'备注':'Remark')+'</th><th>'+(isZh?'品牌':'Brand')+'</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '</div>';
+  } else {
+    qaSection='<div class="ap-noprofile">'+(isZh?'该坐席暂无 QA 错误记录':'No QA error records for this agent')+'</div>';
+  }
+
+  body.innerHTML=header+kpi+chartPanel+qaSection;
+  overlay.classList.add('open');
+
+  // Render the trend chart after the canvas exists in the DOM
+  var ctx=document.getElementById('ap-chart');
+  if(ctx){
+    if(apChart){apChart.destroy();apChart=null;}
+    apChart=new Chart(ctx.getContext('2d'),{
+      data:{
+        labels:slaAgg.monthly.map(function(m){return m.month;}),
+        datasets:[
+          {type:'bar',label:isZh?'接单量':'Chats',data:slaAgg.monthly.map(function(m){return m.chats;}),backgroundColor:'rgba(0,176,255,0.65)',borderRadius:3,yAxisID:'y'},
+          {type:'line',label:'FRT',data:slaAgg.monthly.map(function(m){return m.frt;}),borderColor:'#9b7ff4',backgroundColor:'#9b7ff4',tension:.35,pointRadius:3,borderWidth:2,fill:false,yAxisID:'y1'}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:true,position:'bottom',labels:{color:CC.tick,font:{size:9},boxWidth:8}},tooltip:CC.tt},
+        scales:{
+          x:{grid:{color:CC.grid},ticks:{color:CC.tick,font:{size:9}}},
+          y:{position:'left',grid:{color:CC.grid},ticks:{color:CC.tick,font:{size:9},callback:function(v){return fn(v);}}},
+          y1:{position:'right',grid:{display:false},ticks:{color:CC.tick,font:{size:9}}}
+        }
+      }
+    });
+  }
+}
+
+function closeAgentProfileModal(){
+  var overlay=document.getElementById('agent-profile-overlay');
+  if(overlay) overlay.classList.remove('open');
+  if(apChart){apChart.destroy();apChart=null;}
+  apCurrentAgentKey=null;
+}
+// ── END AGENT AUDIT PROFILE ─────────────────────────────────────────────
+
 // ── ZOOM MODAL — double-click any zoomable panel to enlarge it ─────────────
 var zoomModalChart=null;
 function zoomPanel(kind,sourceId,title,tag){
@@ -3764,7 +4585,7 @@ function closeZoomModal(){
 }
 
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape') closeZoomModal();
+  if(e.key==='Escape'){ closeZoomModal(); closeAgentProfileModal(); }
 });
 // ── END ZOOM MODAL ──────────────────────────────────────────────────────
 
