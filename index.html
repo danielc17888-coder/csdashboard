@@ -171,6 +171,24 @@ canvas{max-height:200px}
 .detail-foot{padding:12px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);flex-shrink:0}
 
 /* TABLE */
+.sched-tbl{border-collapse:collapse;font-family:var(--mono)}
+.sched-tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;padding:8px 4px;text-align:center;border-bottom:1px solid var(--border2);white-space:nowrap}
+.sched-tbl td{padding:0;text-align:center;vertical-align:middle;border-bottom:1px solid rgba(255,255,255,0.03)}
+.sched-col-name,.sched-col-psd,.sched-col-pos{position:sticky;z-index:5;background:var(--card);padding:9px 12px !important;text-align:left !important;white-space:nowrap;font-family:var(--font);font-size:12px;color:var(--text)}
+.sched-col-name{left:0;font-weight:700;border-right:1px solid var(--border2);width:150px;min-width:150px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.sched-col-psd{left:150px;color:var(--teal);font-weight:600;font-size:11px;border-right:1px solid var(--border2);width:100px;min-width:100px;max-width:100px}
+.sched-col-pos{left:250px;color:var(--muted);font-weight:500;font-size:11px;border-right:2px solid var(--border2);width:140px;min-width:140px;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.sched-name-sub{display:none} /* superseded by separate PSD-ID column, kept for backward compat */
+.sched-cell-inner{width:36px;height:36px;margin:3px auto;border-radius:6px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:default}
+.sched-day{background:var(--teal-d);color:var(--teal);border:2px solid transparent}
+.sched-night{background:var(--purple-d);color:var(--purple);border:2px solid transparent}
+.sched-off{background:transparent;color:var(--dim);font-size:9px;border:2px solid var(--border)}
+.sched-flag{border-color:var(--red) !important}
+.sched-sum-cell{padding:9px 10px !important;font-size:13px;font-weight:800;color:var(--text);background:var(--panel)}
+.sched-sum-first{border-left:2px solid var(--border2)}
+.sched-sum-day{color:var(--teal)}
+.sched-sum-night{color:var(--purple)}
+.sched-sum-off{color:var(--muted)}
 .dt{width:100%;border-collapse:collapse}
 .dt th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;white-space:nowrap}
 .dt td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;font-family:var(--mono);white-space:nowrap;vertical-align:middle}
@@ -458,6 +476,7 @@ body.light select option{background:#ffffff;color:#0c1e35}
   <div class="nav-item" onclick="showPage('sla',this)"><div class="nav-dot" style="background:#00e676"></div><span>SLA Metrics</span></div>
   <div class="nav-item" onclick="showPage('qa',this)"><div class="nav-dot" style="background:#ff4081"></div><span data-i18n="qaErrors">QA Errors</span></div>
   <div class="nav-item" onclick="showPage('attendance',this)"><div class="nav-dot" style="background:#2dd4bf"></div><span>Attendance</span></div>
+  <div class="nav-item" onclick="showPage('schedule',this)"><div class="nav-dot" style="background:#facc15"></div><span>Schedule</span></div>
   <div class="nav-sec" data-i18n="auditSec">Audit</div>
   <div class="nav-item" onclick="showAuditDomain('agentbot',this)"><div class="nav-dot" style="background:#9b7ff4"></div><span data-i18n="auditAgentBot">Agent & Bot</span></div>
   <div class="nav-item" onclick="showAuditDomain('agentprofile',this)"><div class="nav-dot" style="background:#ffd54f"></div><span data-i18n="auditAgentProfile">Agent Audit Profile</span></div>
@@ -1006,6 +1025,37 @@ body.light select option{background:#ffffff;color:#0c1e35}
       </div>
     </div>
 
+    <!-- SCHEDULE — Day/Night/Off calendar, derived from Attendance check-in rows.
+         No new Google Sheet needed: a day WITH a row = that day's Shift value,
+         a day with NO row = Day Off. Internal CS only, same as Attendance. -->
+    <div class="page" id="page-schedule">
+      <div style="display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;flex-wrap:wrap">
+        <div class="filter-group"><span class="filter-lbl">Month</span>
+        <select class="fsel" id="sched-month" onchange="applyScheduleFilters()"></select></div>
+        <div class="filter-div"></div>
+        <input id="sched-search" type="text" placeholder="Search name or PSD-ID..." oninput="renderSchedule()" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:11px;padding:6px 10px;border-radius:6px;width:180px;font-family:var(--font)">
+        <button class="ref-btn" onclick="exportSchedule()" title="Export the current month/agent filter as a standalone HTML report"><i class="fa-solid fa-download"></i> Export Report</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);font-family:var(--mono)">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--teal);vertical-align:middle;margin-right:4px"></span>Day</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--purple);vertical-align:middle;margin-right:4px"></span>Night</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--dim);vertical-align:middle;margin-right:4px"></span>Off</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid var(--red);vertical-align:middle;margin-right:4px"></span>Late/Early</span>
+        </div>
+      </div>
+
+      <div id="sched-empty" class="ap-noprofile" style="display:none">No attendance data loaded for this region yet -- the Schedule view is built from Attendance check-in records.</div>
+
+      <div id="sched-body">
+        <div class="panel" style="margin-top:14px">
+          <div class="ph" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div class="ph-t">🗓️ Schedule — <span id="sched-month-label">—</span></div>
+            <span class="ph-tag" id="sched-agent-count">—</span>
+          </div>
+          <div style="overflow:auto;max-height:640px" id="sched-grid-wrap"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- AUDIT -->
     <div class="page" id="page-audit">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
@@ -1297,8 +1347,8 @@ function filterVolData(d){
   });
 }
 
-var PAGES={overview:'Overview',daily:'Daily Report',sla:'SLA Metrics',peaks:'Peaks & Valleys',auto:'Automation Containment',qa:'QA Error Diagnostics',attendance:'Attendance',audit:'Agent & Bot',"audit-profile":'Agent Audit Profile'};
-var PAGES_ZH={overview:'总览',daily:'每日报告',sla:'SLA 指标',peaks:'峰值谷值',auto:'自动化遏制率',qa:'QA 错误诊断',attendance:'考勤',audit:'人工与机器人',"audit-profile":'坐席审计档案'};
+var PAGES={overview:'Overview',daily:'Daily Report',sla:'SLA Metrics',peaks:'Peaks & Valleys',auto:'Automation Containment',qa:'QA Error Diagnostics',attendance:'Attendance',schedule:'Schedule',audit:'Agent & Bot',"audit-profile":'Agent Audit Profile'};
+var PAGES_ZH={overview:'总览',daily:'每日报告',sla:'SLA 指标',peaks:'峰值谷值',auto:'自动化遏制率',qa:'QA 错误诊断',attendance:'考勤',schedule:'排班表',audit:'人工与机器人',"audit-profile":'坐席审计档案'};
 var PAGE_SUB={
   overview:'🏠 Live health check · Trends, no fixed targets · Internal + Outsource combined',
   daily:'📅 Day-by-day Agent vs Bot breakdown · Drill into any month',
@@ -1307,6 +1357,7 @@ var PAGE_SUB={
   auto:'🤖 Bot vs Agent volume · Containment rate by brand & month',
   qa:'🔴 Error counts by category · Internal vs Outsource',
   attendance:'🕒 Check-in/out, late, early-out & break compliance · Internal CS only',
+  schedule:'🗓️ Day / Night / Off calendar, built from Attendance check-in records · Internal CS only',
   audit:'📊 Period-over-period comparison · Agent vs Agent · Bot vs Bot',
   "audit-profile":'🪪 Search any agent · Info, SLA, QA Errors & Handled Chats in one profile'
 };
@@ -1318,6 +1369,7 @@ var PAGE_SUB_ZH={
   auto:'🤖 机器人 vs 人工量 · 各品牌/月份遏制率',
   qa:'🔴 各类错误数量统计 · 内部 vs 外包',
   attendance:'🕒 打卡、迟到、早退与休息合规 · 仅限内部坐席',
+  schedule:'🗓️ 根据考勤打卡记录生成的白班/夜班/休息日历 · 仅限内部坐席',
   audit:'📊 周期对比分析 · 人工对人工 · 机器人对机器人',
   "audit-profile":'🪪 搜索坐席 · 一个面板看信息/SLA/QA错误/接单量'
 };
@@ -1749,6 +1801,24 @@ function downloadHtmlFile_(htmlStr,filename){
   a.href=url; a.download=filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+}
+
+// Generic text-file download (CSV, etc). Prepends a UTF-8 BOM so Excel opens
+// non-ASCII names (e.g. Chinese) correctly instead of showing mojibake.
+function downloadTextFile_(text,filename,mime){
+  var blob=new Blob(['\uFEFF'+text],{type:(mime||'text/plain')+';charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+}
+// One field, safely CSV-quoted (wraps in quotes + escapes embedded quotes
+// whenever the value contains a comma, quote, or newline).
+function csvField_(v){
+  var s=(v===null||v===undefined)?'':String(v);
+  if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
 }
 
 // ── Static assets for the exported "Operations Report" style: full CSS + a
@@ -3414,6 +3484,7 @@ function renderAll(){
   if(document.getElementById('page-audit')&&document.getElementById('page-audit').classList.contains('active')) renderAudit();
   if(raw.qa&&raw.qa.length){renderQA();}
   renderAttendance();
+  renderSchedule();
   renderOverview();
 }
 
@@ -4988,6 +5059,314 @@ function renderAttendanceDailyPanel(){
     '</tr>';
   }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No daily records for this filter</td></tr>';
 }
+
+// ── SCHEDULE — Day/Night/Off calendar, built entirely from Attendance data ──
+// No separate "roster" sheet is needed: a row in the Attendance sheet for
+// agent X on day D already tells us the Shift (Day/Night) and check-in/out
+// times. If there's NO row for agent X on day D, that day is a Day Off.
+// This mirrors exactly what management already keeps in the Attendance
+// Google Sheet — this view just re-renders it as a month grid instead of a
+// flat list. Internal CS only, same scope as the Attendance page.
+var schedMonthFilter=null;
+
+function populateScheduleMonthDropdown_(){
+  var sel=document.getElementById('sched-month');
+  if(!sel||!attParsed||!attParsed.monthList) return;
+  var current=sel.value;
+  sel.innerHTML=attParsed.monthList.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('');
+  if(attParsed.monthList.indexOf(current)>=0){
+    sel.value=current;
+  } else {
+    // Default to the most recent month that actually has data
+    schedMonthFilter=attParsed.monthList[attParsed.monthList.length-1];
+    sel.value=schedMonthFilter;
+  }
+}
+
+function applyScheduleFilters(){
+  schedMonthFilter=document.getElementById('sched-month').value;
+  renderSchedule();
+}
+
+// Normalizes whatever text is in the sheet's Shift column down to Day/Night
+// so small variations ("Day","DAY","D","Day Shift") don't break the grid.
+function schedNormShift_(raw){
+  var s=String(raw||'').trim().toLowerCase();
+  if(!s) return 'day'; // Shift column blank but a check-in row exists — assume Day
+  if(/night|n\b|^n$|pm/.test(s)) return 'night';
+  return 'day';
+}
+
+// Shared by renderSchedule() and exportSchedule() so the exported file always
+// matches exactly what's on screen (same roster, same month, same search filter).
+function schedBuildData_(){
+  var daysInMonth=ATT_MO_DAYS_2026[ATT_MO_IDX[schedMonthFilter]]||30;
+
+  // Full Internal CS roster (same source as Agent Audit Profile's directory —
+  // the CS Detail sheet), NOT just agents who happen to have a check-in row
+  // this month. A day with no matching row for an agent still shows as their
+  // OFF day below — it should never make the agent disappear from the list.
+  var dir=buildAgentDirectory();
+  var agentsByKey={};
+  Object.keys(dir).forEach(function(k){
+    var d=dir[k];
+    if(d.team!=='Internal') return; // Outsource attendance isn't tracked, same as the Attendance page
+    var profile=AGENT_PROFILE_DATA[k]||AGENT_PROFILE_DATA[d.name.trim().toUpperCase()];
+    var st=(profile&&profile.status?profile.status:'').trim().toLowerCase();
+    if(st.indexOf('resign')>=0) return; // left the company — don't keep showing them
+    agentsByKey[k]={psdId:d.psdId,name:d.name,key:k};
+  });
+  // Safety net: also pick up anyone who has an attendance row this month but,
+  // for whatever reason, isn't in the CS Detail directory yet.
+  var monthRows=(attParsed.rowsRaw||[]).filter(function(r){return r.month===schedMonthFilter;});
+  monthRows.forEach(function(r){
+    var key=normPsd_(r.psdId);
+    if(!agentsByKey[key]) agentsByKey[key]={psdId:r.psdId,name:r.name||r.psdId,key:key};
+  });
+  var agents=Object.values(agentsByKey).sort(function(a,b){return a.name.localeCompare(b.name);});
+
+  var q=(document.getElementById('sched-search')||{}).value||'';
+  q=q.trim().toLowerCase();
+  if(q) agents=agents.filter(function(a){return a.name.toLowerCase().indexOf(q)>=0||String(a.psdId).toLowerCase().indexOf(q)>=0;});
+
+  // Index rows for this month by "psdKey-day" for O(1) lookup while building the grid
+  var byAgentDay={};
+  monthRows.forEach(function(r){
+    byAgentDay[normPsd_(r.psdId)+'-'+r.day]=r;
+  });
+
+  var WEEKDAY_LETTERS=['S','M','T','W','T','F','S'];
+  // 2026-01-01 is a Thursday (index 4) — used to compute weekday letters
+  // for any day in any month of 2026 without pulling in a date library.
+  var JAN1_2026_DOW=4;
+  var monthStartOffset=0;
+  for(var mi=0;mi<ATT_MO_IDX[schedMonthFilter];mi++) monthStartOffset+=ATT_MO_DAYS_2026[mi];
+
+  return {daysInMonth:daysInMonth,agents:agents,byAgentDay:byAgentDay,WEEKDAY_LETTERS:WEEKDAY_LETTERS,JAN1_2026_DOW:JAN1_2026_DOW,monthStartOffset:monthStartOffset};
+}
+
+function renderSchedule(){
+  var emptyEl=document.getElementById('sched-empty');
+  var bodyEl=document.getElementById('sched-body');
+  if(!attParsed||!attParsed.monthList||!attParsed.monthList.length){
+    if(emptyEl){
+      emptyEl.style.display='block';
+      var msg='No attendance data loaded for this region yet -- the Schedule view is built from Attendance check-in records.';
+      if(attParsed&&attParsed.totalRowsSeen===0&&raw.attendance&&raw.attendance.length){
+        msg='Attendance sheet loaded but no rows with a PSD-ID were found — check the sheet\'s column headers.';
+      } else if(attParsed&&attParsed.totalRowsSeen>0&&attParsed.monthList.length===0){
+        msg='Attendance sheet has '+attParsed.totalRowsSeen+' row(s) but none of the dates could be parsed. Check the Date column format.';
+      }
+      emptyEl.textContent=msg;
+    }
+    if(bodyEl) bodyEl.style.display='none';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  if(bodyEl) bodyEl.style.display='block';
+
+  populateScheduleMonthDropdown_();
+  if(!schedMonthFilter||attParsed.monthList.indexOf(schedMonthFilter)<0) schedMonthFilter=attParsed.monthList[attParsed.monthList.length-1];
+  var monthSel=document.getElementById('sched-month');
+  if(monthSel) monthSel.value=schedMonthFilter;
+
+  var mLbl=document.getElementById('sched-month-label');
+  if(mLbl) mLbl.textContent=schedMonthFilter;
+
+  var sd=schedBuildData_();
+  var daysInMonth=sd.daysInMonth, agents=sd.agents, byAgentDay=sd.byAgentDay;
+  var WEEKDAY_LETTERS=sd.WEEKDAY_LETTERS, JAN1_2026_DOW=sd.JAN1_2026_DOW, monthStartOffset=sd.monthStartOffset;
+
+  var countEl=document.getElementById('sched-agent-count');
+  if(countEl) countEl.textContent=agents.length+(agents.length===1?' agent':' agents');
+
+  var headHtml='<tr><th class="sched-col-name" style="z-index:6">Agent</th><th class="sched-col-psd" style="z-index:6">PSD-ID</th><th class="sched-col-pos" style="z-index:6">Position</th>';
+  var subHtml='<tr><th class="sched-col-name" style="z-index:6;border-top:none">&nbsp;</th><th class="sched-col-psd" style="z-index:6;border-top:none">&nbsp;</th><th class="sched-col-pos" style="z-index:6;border-top:none">&nbsp;</th>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dow=WEEKDAY_LETTERS[(JAN1_2026_DOW+monthStartOffset+d-1)%7];
+    headHtml+='<th>'+d+'</th>';
+    subHtml+='<th style="color:var(--dim)">'+dow+'</th>';
+  }
+  headHtml+='<th class="sched-sum-first">Day</th><th>Night</th><th>Off</th></tr>';
+  subHtml+='<th class="sched-sum-first">&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th></tr>';
+
+  var bodyHtml=agents.map(function(a){
+    var profile=AGENT_PROFILE_DATA?(AGENT_PROFILE_DATA[a.key]||AGENT_PROFILE_DATA[a.name.trim().toUpperCase()]):null;
+    var position=(profile&&profile.position)?profile.position:'—';
+    var row='<tr><td class="sched-col-name" title="'+a.name+'">'+a.name+'</td>'+
+      '<td class="sched-col-psd">'+a.psdId+'</td>'+
+      '<td class="sched-col-pos" title="'+position+'">'+position+'</td>';
+    var dayCount=0,nightCount=0,offCount=0;
+    for(var d2=1;d2<=daysInMonth;d2++){
+      var rec=byAgentDay[a.key+'-'+d2];
+      if(!rec){
+        offCount++;
+        row+='<td><div class="sched-cell-inner sched-off" title="'+a.name+' · '+schedMonthFilter+' '+d2+' · Day Off">OFF</div></td>';
+      } else {
+        var isNight=schedNormShift_(rec.shift)==='night';
+        if(isNight) nightCount++; else dayCount++;
+        var flagged=rec.isLate||rec.isEarly;
+        var cls='sched-cell-inner '+(isNight?'sched-night':'sched-day')+(flagged?' sched-flag':'');
+        var tip=a.name+' · '+rec.date+' · '+(isNight?'Night':'Day')+' shift'+
+          (rec.checkIn?(' · In '+rec.checkIn):'')+(rec.checkOut?(' · Out '+rec.checkOut):'')+
+          (rec.isLate?' · LATE':'')+(rec.isEarly?' · EARLY OUT':'');
+        row+='<td><div class="'+cls+'" title="'+tip.replace(/"/g,'&quot;')+'">'+(isNight?'N':'D')+'</div></td>';
+      }
+    }
+    row+='<td class="sched-sum-cell sched-sum-day sched-sum-first">'+dayCount+'</td>'+
+      '<td class="sched-sum-cell sched-sum-night">'+nightCount+'</td>'+
+      '<td class="sched-sum-cell sched-sum-off">'+offCount+'</td>';
+    row+='</tr>';
+    return row;
+  }).join('') || '<tr><td colspan="'+(daysInMonth+6)+'" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--font)">No agents match this filter</td></tr>';
+
+  var wrap=document.getElementById('sched-grid-wrap');
+  if(wrap) wrap.innerHTML='<table class="sched-tbl"><thead>'+headHtml+subHtml+'</thead><tbody>'+bodyHtml+'</tbody></table>';
+}
+
+// Exports exactly what's currently on screen (same month + same search filter,
+// so "search one agent then Export" gives a single-agent file) as a standalone,
+// self-contained HTML report — same pattern as "Export Month Report": own CSS
+// baked in, no dependency back on this dashboard or the Google Sheet, opens
+// directly in any browser. Includes the visual D/N/OFF calendar PLUS an
+// auto-computed Attendance Summary table per agent (Late days, Early days,
+// etc.), pulled from attAggregateForFilter_ — the same aggregation the
+// Attendance page itself uses, so the numbers always match.
+function buildScheduleReportHtml_(){
+  var sd=schedBuildData_();
+  var daysInMonth=sd.daysInMonth, agents=sd.agents, byAgentDay=sd.byAgentDay;
+  var WEEKDAY_LETTERS=sd.WEEKDAY_LETTERS, JAN1_2026_DOW=sd.JAN1_2026_DOW, monthStartOffset=sd.monthStartOffset;
+
+  // Per-agent Late/Early/Attendance stats for this exact month, narrowed to
+  // just the agents currently shown (respects the search filter too).
+  var statsList=attAggregateForFilter_(attParsed,schedMonthFilter);
+  var statsByKey={};
+  statsList.forEach(function(s){ statsByKey[normPsd_(s.psdId)]=s; });
+
+  function esc(s){ return String(s===undefined||s===null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  var headRow1='<th class="nm">Agent</th><th class="nm">PSD-ID</th><th class="nm">Position</th>';
+  var headRow2='<th class="nm"></th><th class="nm"></th><th class="nm"></th>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dow=WEEKDAY_LETTERS[(JAN1_2026_DOW+monthStartOffset+d-1)%7];
+    headRow1+='<th>'+d+'</th>';
+    headRow2+='<th class="dow">'+dow+'</th>';
+  }
+  headRow1+='<th class="sum">Day</th><th class="sum">Night</th><th class="sum">Off</th>';
+  headRow2+='<th class="sum"></th><th class="sum"></th><th class="sum"></th>';
+
+  var gridRows=agents.map(function(a){
+    var profile=AGENT_PROFILE_DATA?(AGENT_PROFILE_DATA[a.key]||AGENT_PROFILE_DATA[a.name.trim().toUpperCase()]):null;
+    var position=(profile&&profile.position)?profile.position:'—';
+    var row='<tr><td class="nm nm-agent">'+esc(a.name)+'</td><td class="nm nm-psd">'+esc(a.psdId)+'</td><td class="nm nm-pos">'+esc(position)+'</td>';
+    var dayCount=0,nightCount=0,offCount=0;
+    for(var d2=1;d2<=daysInMonth;d2++){
+      var rec=byAgentDay[a.key+'-'+d2];
+      if(!rec){
+        offCount++;
+        row+='<td><div class="cell off">OFF</div></td>';
+      } else {
+        var isNight=schedNormShift_(rec.shift)==='night';
+        if(isNight) nightCount++; else dayCount++;
+        var flagged=rec.isLate||rec.isEarly;
+        var tip=(rec.checkIn?('In '+rec.checkIn+' '):'')+(rec.checkOut?('Out '+rec.checkOut+' '):'')+(rec.isLate?'LATE ':'')+(rec.isEarly?'EARLY':'');
+        row+='<td><div class="cell '+(isNight?'night':'day')+(flagged?' flag':'')+'" title="'+esc(tip.trim())+'">'+(isNight?'N':'D')+'</div></td>';
+      }
+    }
+    row+='<td class="sum sumday">'+dayCount+'</td><td class="sum sumnight">'+nightCount+'</td><td class="sum sumoff">'+offCount+'</td></tr>';
+    return row;
+  }).join('');
+
+  var statRows=agents.map(function(a){
+    var s=statsByKey[a.key];
+    var profile=AGENT_PROFILE_DATA?(AGENT_PROFILE_DATA[a.key]||AGENT_PROFILE_DATA[a.name.trim().toUpperCase()]):null;
+    var position=(profile&&profile.position)?profile.position:'—';
+    if(!s){
+      return '<tr><td class="nm-agent">'+esc(a.name)+'</td><td>'+esc(a.psdId)+'</td><td>'+esc(position)+'</td>'+
+        '<td colspan="7" style="text-align:center;color:#64748b">No attendance rows this month</td></tr>';
+    }
+    return '<tr><td class="nm-agent">'+esc(a.name)+'</td><td>'+esc(a.psdId)+'</td><td>'+esc(position)+'</td>'+
+      '<td>'+s.daysPresent+'</td>'+
+      '<td>'+s.daysOff+'</td>'+
+      '<td>'+(s.attendanceRate*100).toFixed(0)+'%</td>'+
+      '<td class="'+(s.lateCount>0?'warn':'')+'">'+s.lateCount+'</td>'+
+      '<td>'+attFmtHM_(s.lateMinTotal)+'</td>'+
+      '<td class="'+(s.earlyCount>0?'bad':'')+'">'+s.earlyCount+'</td>'+
+      '<td>'+attFmtHM_(s.earlyMinTotal)+'</td></tr>';
+  }).join('');
+
+  var agentSuffix=(agents.length===1)?(' — '+agents[0].name):'';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<title>'+esc(currentRegion)+' Schedule Report — '+esc(schedMonthFilter)+esc(agentSuffix)+'</title>'+
+    '<style>'+
+    ':root{--bg:#0a0d16;--card:#131928;--border:#1a2035;--border2:#243050;--text:#e2e8f0;--muted:#64748b;'+
+    '--teal:#00b0ff;--teal-d:rgba(0,176,255,0.12);--purple:#9b7ff4;--purple-d:rgba(155,127,244,0.12);'+
+    '--amber:#ff9100;--red:#ff4081;--dim:#2d3748;}'+
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:13px;padding:28px}'+
+    '.wrap{max-width:1320px;margin:0 auto}'+
+    'h1{font-size:19px;font-weight:800;margin-bottom:4px}'+
+    '.meta{color:var(--muted);font-size:12px;margin-bottom:20px;font-family:monospace}'+
+    '.legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-bottom:16px;font-family:monospace}'+
+    '.legend span{display:inline-flex;align-items:center;gap:5px}'+
+    '.sw{width:10px;height:10px;border-radius:2px;display:inline-block}'+
+    'h2{font-size:14px;font-weight:800;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}'+
+    'table{border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-family:monospace;width:100%}'+
+    '.gridwrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}'+
+    'th,td{padding:5px 3px;text-align:center;font-size:10px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04)}'+
+    'th{color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-size:9px;border-bottom:1px solid var(--border2)}'+
+    'th.dow{color:var(--dim);font-weight:400}'+
+    'td.nm,th.nm{text-align:left;padding:7px 10px;font-family:-apple-system,Segoe UI,Roboto,sans-serif}'+
+    'td.nm-agent{font-weight:700}'+
+    'td.nm-psd{color:var(--teal)}'+
+    'td.nm-pos{color:var(--muted)}'+
+    '.cell{width:20px;height:20px;margin:1px auto;border-radius:4px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}'+
+    '.cell.day{background:var(--teal-d);color:var(--teal)}'+
+    '.cell.night{background:var(--purple-d);color:var(--purple)}'+
+    '.cell.off{background:transparent;color:var(--dim);font-size:8px;opacity:.55}'+
+    '.cell.flag{box-shadow:0 0 0 1.5px var(--red)}'+
+    'th.sum,td.sum{border-left:2px solid var(--border2);font-weight:800}'+
+    '.sumday{color:var(--teal)}.sumnight{color:var(--purple)}.sumoff{color:var(--muted)}'+
+    '.stattbl{width:100%;font-family:-apple-system,Segoe UI,Roboto,sans-serif}'+
+    '.stattbl th,.stattbl td{text-align:center;padding:8px 10px;font-size:11px;font-family:-apple-system,Segoe UI,Roboto,sans-serif}'+
+    '.stattbl td:first-child,.stattbl th:first-child{text-align:left}'+
+    '.warn{color:var(--amber);font-weight:800}.bad{color:var(--red);font-weight:800}'+
+    '.foot{margin-top:22px;color:var(--muted);font-size:10px;font-family:monospace}'+
+    '</style></head><body><div class="wrap">'+
+    '<h1>🗓️ '+esc(currentRegion)+' Schedule Report — '+esc(schedMonthFilter)+esc(agentSuffix)+'</h1>'+
+    '<div class="meta">Generated '+esc(new Date().toLocaleString())+' · Internal CS only · Built from Attendance check-in records</div>'+
+    '<div class="legend">'+
+      '<span><span class="sw" style="background:var(--teal)"></span>Day</span>'+
+      '<span><span class="sw" style="background:var(--purple)"></span>Night</span>'+
+      '<span><span class="sw" style="background:var(--dim);border:1px solid var(--border)"></span>Off</span>'+
+      '<span><span class="sw" style="background:var(--card);box-shadow:0 0 0 1.5px var(--red)"></span>Late / Early</span>'+
+    '</div>'+
+    '<h2>Calendar — '+esc(schedMonthFilter)+'</h2>'+
+    '<div class="gridwrap"><table><thead><tr>'+headRow1+'</tr><tr>'+headRow2+'</tr></thead><tbody>'+
+      (gridRows||'<tr><td colspan="'+(daysInMonth+6)+'" style="text-align:center;color:var(--muted);padding:20px">No agents match this filter</td></tr>')+
+    '</tbody></table></div>'+
+    '<h2>Attendance Summary — '+esc(schedMonthFilter)+' <span style="color:var(--muted);font-weight:400;font-size:11px">(auto-calculated: Late / Early days &amp; minutes)</span></h2>'+
+    '<div class="gridwrap"><table class="stattbl"><thead><tr>'+
+      '<th>Agent</th><th>PSD-ID</th><th>Position</th><th>Days Present</th><th>Days Off</th><th>Attendance %</th>'+
+      '<th>Late (days)</th><th>Late (total)</th><th>Early Out (days)</th><th>Early Out (total)</th>'+
+    '</tr></thead><tbody>'+
+      (statRows||'<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No agents match this filter</td></tr>')+
+    '</tbody></table></div>'+
+    '<div class="foot">Generated from '+esc(currentRegion)+' Google Sheet · Schedule page · self-contained file, no live connection back to the dashboard</div>'+
+    '</div></body></html>';
+}
+
+function exportSchedule(){
+  if(!attParsed||!attParsed.monthList||!attParsed.monthList.length){ alert('No attendance data loaded for this region yet — nothing to export.'); return; }
+  var sd=schedBuildData_();
+  if(!sd.agents.length){ alert('No agents match the current filter — nothing to export.'); return; }
+  var agentSuffix=(sd.agents.length===1)?('_'+sd.agents[0].name.replace(/[^a-z0-9]+/gi,'')):'';
+  var html=buildScheduleReportHtml_();
+  downloadHtmlFile_(html,currentRegion+'_Schedule_'+schedMonthFilter+agentSuffix+'.html');
+}
+// ── END SCHEDULE ────────────────────────────────────────────────────────
+
 // Header click-to-sort (attached once at boot, see bottom of script)
 document.addEventListener('DOMContentLoaded',function(){
   var tbl=document.getElementById('att-tbl');
@@ -5005,10 +5384,17 @@ function attGetAgentSummary_(identity,monthFilter){
   if(!attParsed||!attParsed.monthList||!attParsed.monthList.length) return null;
   var list=attAggregateForFilter_(attParsed,monthFilter||'all');
   var key=normPsd_(identity.psdId||'');
-  var match=list.find(function(a){return normPsd_(a.psdId)===key;});
+  var match=key?list.find(function(a){return normPsd_(a.psdId)===key;}):null;
   if(!match&&identity.name){
     var nameUp=identity.name.trim().toUpperCase();
     match=list.find(function(a){return a.name.trim().toUpperCase()===nameUp;});
+  }
+  // Last resort: same set of name-words regardless of order/spacing/nickname
+  // parens — catches cases like CS Detail's "Akilan Manoharan" vs the
+  // Attendance sheet's "Manoharan Akilan" that the exact-string match above misses.
+  if(!match&&identity.name){
+    var looseKey=normNameLoose_(identity.name);
+    if(looseKey) match=list.find(function(a){return normNameLoose_(a.name)===looseKey;});
   }
   return match||null;
 }
@@ -5027,7 +5413,8 @@ function showPage(id,nav){
   if(pgSubEl) pgSubEl.textContent=lang==='zh'?(PAGE_SUB_ZH[id]||''):(PAGE_SUB[id]||'');
   // Hide global filter bar on SLA page (SLA has its own filters)
   var fb=document.getElementById('global-filter-bar');
-  if(fb) fb.style.display=(id==='sla'||id==='auto'||id==='qa'||id==='daily'||id==='overview'||id==='audit'||id==='audit-profile'||id==='attendance')?'none':'flex';
+  if(fb) fb.style.display=(id==='sla'||id==='auto'||id==='qa'||id==='daily'||id==='overview'||id==='audit'||id==='audit-profile'||id==='attendance'||id==='schedule')?'none':'flex';
+  if(id==='schedule') renderSchedule();
   // Hide brand filter on QA page (QA data is not split by brand)
   var hideB=(id==='qa');
   var bfg=document.getElementById('brand-filter-group');
@@ -5829,6 +6216,24 @@ function normPsd_(s){
   return String(s||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
 }
 
+// Loose name comparison for matching the same person across sheets that don't
+// always spell their name identically — e.g. CS Detail has "Akilan Manoharan"
+// but the Attendance sheet has "Manoharan Akilan" (word order swapped), or one
+// sheet has a trailing nickname in parentheses ("Krishnakumar (Aishu)"). Strips
+// parenthetical nicknames, non-letters, and compares the SET of words instead
+// of the literal string, so word-order and spacing differences no longer break
+// the match. Still exact enough that two different people won't collide.
+function normNameLoose_(s){
+  return String(s||'')
+    .replace(/\(.*?\)/g,' ')
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g,' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .sort()
+    .join(' ');
+}
+
 // Translates the small, fixed set of Performance ratings the "CS Detail"
 // sheet actually uses (GOOD / Average / Bad) — this is a controlled value
 // list, not free text, so it's safe to map. Anything outside this known set
@@ -5995,8 +6400,11 @@ function aggregateAgentSLA(identity,monthFilter){
       var m=slaParsed.months[mo];
       if(!m) return;
       var found=Object.values(m.agents||{}).find(function(a){
-        if(identity.psdId) return normPsd_(a.psdId)===normPsd_(identity.psdId);
-        return a.name.trim().toUpperCase()===identity.name.trim().toUpperCase();
+        if(identity.psdId&&a.psdId&&normPsd_(a.psdId)===normPsd_(identity.psdId)) return true;
+        if(!identity.name) return false;
+        var nameUp=identity.name.trim().toUpperCase();
+        if(a.name.trim().toUpperCase()===nameUp) return true;
+        return normNameLoose_(a.name)===normNameLoose_(identity.name);
       });
       if(!found) return;
       monthly.push({month:mo,chats:found.chats||0,frt:found.frt||0,mrt:found.mrt||0,aht:found.aht||0,csat:found.csat||0});
@@ -6125,10 +6533,10 @@ function renderCurrentAgentProfile_(){
 
   var slaAgg=aggregateAgentSLA(identity,apMonthFilter);
 
-  // ── QA errors for this agent (match by PSD-ID first, fall back to name), optionally narrowed to one month ──
+  // ── QA errors for this agent (match by PSD-ID first, fall back to name — exact then loose/word-order-independent), optionally narrowed to one month ──
   var qaEntries=(qaLogCache||[]).filter(function(r){
     var psdMatch=identity.psdId&&r.psd&&normPsd_(r.psd)===normPsd_(identity.psdId);
-    var nameMatch=r.cs&&r.cs.trim().toUpperCase()===identity.name.trim().toUpperCase();
+    var nameMatch=identity.name&&r.cs&&(r.cs.trim().toUpperCase()===identity.name.trim().toUpperCase()||normNameLoose_(r.cs)===normNameLoose_(identity.name));
     if(!(psdMatch||nameMatch)) return false;
     if(apMonthFilter!=='all'){
       var mo=qaEntryMonth_(r.date);
