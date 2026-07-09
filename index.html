@@ -182,12 +182,14 @@ canvas{max-height:200px}
 .sched-cell-inner{width:36px;height:36px;margin:3px auto;border-radius:6px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:default}
 .sched-day{background:var(--teal-d);color:var(--teal);border:2px solid transparent}
 .sched-night{background:var(--purple-d);color:var(--purple);border:2px solid transparent}
+.sched-mid{background:var(--amber-d);color:var(--amber);border:2px solid transparent}
 .sched-off{background:transparent;color:var(--dim);font-size:9px;border:2px solid var(--border)}
 .sched-flag{border-color:var(--red) !important}
 .sched-sum-cell{padding:9px 10px !important;font-size:13px;font-weight:800;color:var(--text);background:var(--panel)}
 .sched-sum-first{border-left:2px solid var(--border2)}
 .sched-sum-day{color:var(--teal)}
 .sched-sum-night{color:var(--purple)}
+.sched-sum-mid{color:var(--amber)}
 .sched-sum-off{color:var(--muted)}
 .dt{width:100%;border-collapse:collapse}
 .dt th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;white-space:nowrap}
@@ -963,7 +965,7 @@ body.light select option{background:#ffffff;color:#0c1e35}
         </select></div>
         <div class="filter-div"></div>
         <span class="filter-info" id="att-filter-info">All Months</span>
-        <button class="ref-btn" style="margin-left:auto" onclick="openOtSubmitModal()" title="Submit a day-off OT shift so this dashboard stops treating that day's check-in/out as late/early/etc."><i class="fa-solid fa-bolt"></i> Submit OT (Day Off)</button>
+        <button class="ref-btn" style="margin-left:auto" onclick="openIssueDaySubmitModal()" title="Submit an OT (Day Off) shift or a System/Software Issue — both exempt that day's late/early check"><i class="fa-solid fa-bug"></i> Submit Issue Day</button>
         <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">Internal CS only -- Outsource attendance isn't tracked</span>
       </div>
 
@@ -981,7 +983,7 @@ body.light select option{background:#ffffff;color:#0c1e35}
           <div class="kpi c-red"><div class="kpi-lbl">Early Check-Out</div><div class="kpi-val" id="att-early">-</div><div class="kpi-d" id="att-early-d">- min total</div></div>
           <div class="kpi c-red"><div class="kpi-lbl">Extra Break (over 90min/day)</div><div class="kpi-val" id="att-extra">-</div><div class="kpi-d" id="att-extra-d">- min total over allowance</div></div>
           <div class="kpi c-red"><div class="kpi-lbl">⚠️ Anomaly (Dup. Check-In)</div><div class="kpi-val" id="att-anomaly">-</div><div class="kpi-d" id="att-anomaly-d">agent-days with 2+ punches same day</div></div>
-          <div class="kpi c-purple"><div class="kpi-lbl">⚡ OT (Day Off)</div><div class="kpi-val" id="att-otdayoff">-</div><div class="kpi-d">submitted — excluded from late/early/etc.</div></div>
+          <div class="kpi c-purple"><div class="kpi-lbl">🐞 Issue Day (Submitted)</div><div class="kpi-val" id="att-otdayoff">-</div><div class="kpi-d" id="att-issueday-d">OT day-off counts as present; both types skip late/early</div></div>
         </div>
 
         <div class="panel" style="margin-top:14px">
@@ -1040,9 +1042,12 @@ body.light select option{background:#ffffff;color:#0c1e35}
         <button class="ref-btn" onclick="openLeaveSubmitModal()" title="Submit a UPL / Sick / Annual leave request — shown as a label on the schedule only"><i class="fa-solid fa-umbrella-beach"></i> Submit Leave</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);font-family:var(--mono);flex-wrap:wrap">
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--teal);vertical-align:middle;margin-right:4px"></span>Day</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--amber);vertical-align:middle;margin-right:4px"></span>Mid</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--purple);vertical-align:middle;margin-right:4px"></span>Night</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--dim);vertical-align:middle;margin-right:4px"></span>Off</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid var(--red);vertical-align:middle;margin-right:4px"></span>Late/Early</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid var(--purple);vertical-align:middle;margin-right:4px"></span>OT (Day Off)</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid var(--amber);vertical-align:middle;margin-right:4px"></span>System Issue</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #ff9100;vertical-align:middle;margin-right:4px"></span>UPL</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #ff4081;vertical-align:middle;margin-right:4px"></span>Sick</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #00b0ff;vertical-align:middle;margin-right:4px"></span>Annual</span>
@@ -1132,9 +1137,9 @@ body.light select option{background:#ffffff;color:#0c1e35}
   </div>
 </div>
 
-<!-- OT (DAY OFF) / LEAVE SUBMISSION MODAL — shared by the Attendance page's
-     "Submit OT (Day Off)" button and the Schedule page's "Submit Leave"
-     button. openOtSubmitModal()/openLeaveSubmitModal() fill #submit-body
+<!-- ISSUE DAY (OT Day-Off / System-Software Issue) / LEAVE SUBMISSION MODAL —
+     shared by the Schedule page's "Submit Issue Day" and "Submit Leave"
+     button. openIssueDaySubmitModal()/openLeaveSubmitModal() fill #submit-body
      with the right fields; submitOtOrLeave_() reads them back out. -->
 <div class="zoom-overlay" id="submit-overlay" onclick="if(event.target===this)closeSubmitModal()">
   <div class="detail-box" id="submit-box" style="width:min(440px,92vw)">
@@ -1197,6 +1202,15 @@ var REGION_CONFIG={
     // URL between /d/ and /edit) here once you have it; until then this stays
     // a placeholder and the Attendance page/section just shows no data.
     attendanceSheetId:'1OsePdK4ZnfbIEKFWLr23uGlJIUE7yFDvSgn3lHGI3Do',
+    // Same "Daily Summary" layout as PKR now (no Shift / Late Check-In / Early
+    // Check-Out columns — those are derived, see parseAttendancePkrV2_) plus a
+    // per-agent baseline-time lookup block in the same tab (columns P:S).
+    attendanceFormat:'shift_lookup_v2',
+    // Confirmed baseline Check-In times for INR's three shift types — used
+    // whenever the "AM/MID/PM" reference table can't be found/parsed out of
+    // the sheet itself (see pkrParseShiftTypeRef_), so MID always works
+    // regardless of exactly which column that table lives in.
+    defaultShiftTypes:[{label:'AM',totalMin:7*60+30},{label:'MID',totalMin:11*60},{label:'PM',totalMin:19*60+30}],
     ranges:{
       sla:'CX Internal SLA Metrics!A1:AD300',
       daily:'Daily Chat Report!A1:N5000',
@@ -1204,13 +1218,15 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300',
       profile:'CS Detail!A1:AF500',
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:'Attendance Report!A1:Q20000', // confirm this matches the real tab name at the bottom of the Attendance sheet
+      attendance:'Attendance Report!A1:N20000', // Date|Employee ID|Employee Name|Project|Check In|Check Out|Duration of Work|3x(Total Duration+Count) break buckets|Remark
+      shiftLookup:'Attendance Report!P1:T500', // per-agent baseline Check-In time block: Project|PSD No|Agent Name|Time|AM/PM
+      shiftTypeRef:'Attendance Report!U1:AF60', // generic shift-type baselines (AM/MID/PM) — starts right after the Shift Lookup block (P:T) so it can't accidentally scoop up agent names as fake shift labels; wide on columns/rows since we don't know the exact position, see pkrParseShiftTypeRef_
       // NEW — Day-off OT / Leave submissions. Live in the same Attendance
       // Google Sheet file (attendanceSheetId), as their own tabs. Create these
       // two tabs there with the header rows described just above
-      // parseOtDayOff()/parseLeaveRequests() if they don't exist yet — the
+      // parseIssueDay()/parseLeaveRequests() if they don't exist yet — the
       // dashboard will just show empty state until they do.
-      otDayOff:'OT DayOff!A1:F2000',
+      issueDay:'Issue Day!A1:G2000', // was 'OT DayOff' — now covers OT (Day Off) AND System/Software Issue submissions, one extra Type column
       leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','CX Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
@@ -1223,9 +1239,13 @@ var REGION_CONFIG={
   },
   PKR:{
     sheetId:'1ozf4pUIrjqrItxMb9gd9Nli6UPGCJ7werPc5bJchKMU',
-    // Attendance not wired up for PKR yet — INR ships first, then this gets
-    // the same treatment (its own Attendance Sheet ID + range) once ready.
-    attendanceSheetId:'',
+    attendanceSheetId:'1H7SDiaz1sulcpa3x9FIn8z39cyqR8kUIS8ePrZljbKE',
+    // PKR's Attendance sheet uses the NEW "Daily Summary" layout (no Shift /
+    // Late Check-In / Early Check-Out columns — those get derived instead,
+    // see parseAttendancePkrV2_) plus a per-agent baseline-time lookup block
+    // in the same tab (columns P:S). INR/PHP still use the classic layout
+    // (parseAttendance) and are untouched by this.
+    attendanceFormat:'shift_lookup_v2',
     ranges:{
       sla:'Internal SLA Metrics!A1:AD300',
       daily:'Daily Chat Report!A1:AB5000',
@@ -1233,8 +1253,9 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300',
       profile:'CS Detail!A1:AF500', // widened past S so a fuller Outsource block (Project/Position/Performance/Task/Remark/Status) isn't truncated
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:'',
-      otDayOff:'OT DayOff!A1:F2000',
+      attendance:'Attendance Report!A1:N20000', // Date|Employee ID|Employee Name|Project|Check In|Check Out|Duration of Work|3x(Total Duration+Count) break buckets|Remark
+      shiftLookup:'Attendance Report!P1:T500', // per-agent baseline Check-In time block: Project|PSD No|Agent Name|Time|AM/PM
+      issueDay:'Issue Day!A1:G2000', // was 'OT DayOff' — now covers OT (Day Off) AND System/Software Issue submissions, one extra Type column
       leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
@@ -1247,6 +1268,12 @@ var REGION_CONFIG={
   PHP:{
     sheetId:'1axIS9xBWuG54xDe4FqP5R1h4WRMXtJEXhKPvDqg-djA',
     attendanceSheetId:'1w8cJooibVQuNDm4hutFyNKMhB0gYx0HO0Rm32lrZmeU',
+    // Same "Daily Summary" layout as PKR/INR (no Shift / Late Check-In / Early
+    // Check-Out columns — those are derived, see parseAttendancePkrV2_) plus a
+    // per-agent baseline-time lookup block in the same tab (columns P:S).
+    // PHP is simpler than INR — just two shifts, AM (8:00) / PM (20:00), no MID.
+    attendanceFormat:'shift_lookup_v2',
+    defaultShiftTypes:[{label:'AM',totalMin:8*60},{label:'PM',totalMin:20*60}],
     ranges:{
       sla:'Internal SLA Metrics!A1:AD300',
       daily:'Daily Chat Report!A1:AB5000',
@@ -1254,8 +1281,10 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300', // tab exists but is currently empty — UI auto-hides Outsource panels until data appears
       profile:'CS Detail!A1:AF500',
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:'Attendance Report!A1:Q20000', // ASSUMED same tab name as INR — confirm this matches the real tab name at the bottom of PHP's attendance sheet, rename here if not
-      otDayOff:'OT DayOff!A1:F2000',
+      attendance:'Attendance Report!A1:N20000', // Date|Employee ID|Employee Name|Project|Check In|Check Out|Duration of Work|3x(Total Duration+Count) break buckets|Remark
+      shiftLookup:'Attendance Report!P1:T500', // per-agent baseline Check-In time block: Project|PSD No|Agent Name|Time|AM/PM
+      shiftTypeRef:'Attendance Report!U1:AF60', // generic shift-type baselines (AM/PM) if present — defaultShiftTypes above covers it either way
+      issueDay:'Issue Day!A1:G2000', // was 'OT DayOff' — now covers OT (Day Off) AND System/Software Issue submissions, one extra Type column
       leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
@@ -1321,8 +1350,12 @@ var qaMonth='all';
 var qaAgent='all';
 var slaParsed=null;
 var attParsed=null;
-var attOtParsed={map:{},list:[]};       // Day-off OT submissions (Attendance page)
+var attIssueParsed={map:{},list:[]};    // Issue Day submissions (OT Day-off / System-Software Issue) — Schedule page
 var attLeaveParsed={byAgentDay:{},list:[]}; // Leave requests (Schedule page)
+var ISSUE_TYPES={
+  OT_DAYOFF:{label:'OT (Day Off)',short:'OT',color:'#9b7ff4',suppressExtraBreakAnomaly:true},
+  SYSTEM_ISSUE:{label:'System / Software Issue',short:'SYS',color:'#f5a83c',suppressExtraBreakAnomaly:false}
+};
 var LEAVE_TYPES={
   UPL:{short:'UPL',full:'UPL (Unpaid Leave)',color:'#ff9100'},
   SICK:{short:'SL',full:'Sick Leave',color:'#ff4081'},
@@ -1762,14 +1795,14 @@ function loadAll(){
   try{
     setSt('loading');
     var cfg=REGION_CONFIG[currentRegion];
-    var keys=['sla','daily','qa','slaOut','profile','slaRemarks','attendance','otDayOff','leaveRequests'];
-    var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut,cfg.ranges.profile,cfg.ranges.slaRemarks,cfg.ranges.attendance,cfg.ranges.otDayOff,cfg.ranges.leaveRequests];
+    var keys=['sla','daily','qa','slaOut','profile','slaRemarks','attendance','issueDay','leaveRequests','shiftLookup','shiftTypeRef'];
+    var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut,cfg.ranges.profile,cfg.ranges.slaRemarks,cfg.ranges.attendance,cfg.ranges.issueDay,cfg.ranges.leaveRequests,cfg.ranges.shiftLookup,cfg.ranges.shiftTypeRef];
     // Attendance lives in its own Google Sheet file (separate sheetId) — everything
     // else shares the region's main sheetId. A missing/placeholder attendanceSheetId
     // just means no attendance data for this region yet (page/section stay empty,
     // nothing errors out) — same "quietly skip" pattern already used for slaOut.
-    // OT DayOff / Leave Requests live as extra tabs in that SAME attendance file.
-    var sheetIds=[cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.attendanceSheetId,cfg.attendanceSheetId,cfg.attendanceSheetId];
+    // OT DayOff / Leave Requests / Shift Lookup / Shift Type Ref live as extra tabs/ranges in that SAME attendance file.
+    var sheetIds=[cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.attendanceSheetId,cfg.attendanceSheetId,cfg.attendanceSheetId,cfg.attendanceSheetId,cfg.attendanceSheetId];
     var promises=ranges.map(function(range,idx){
       var sid=sheetIds[idx];
       if(!range||!sid||sid.indexOf('PASTE_')===0){ raw[keys[idx]]=[]; return Promise.resolve(); }
@@ -1795,9 +1828,11 @@ function loadAll(){
       outsourceRoster=buildAgentRoster_(raw.slaOut);
       AGENT_PROFILE_DATA=parseAgentProfileSheet(raw.profile);
       slaRemarksMap=buildSlaRemarksMap_(raw.slaRemarks);
-      attOtParsed=parseOtDayOff(raw.otDayOff);
+      attIssueParsed=parseIssueDay(raw.issueDay);
       attLeaveParsed=parseLeaveRequests(raw.leaveRequests);
-      attParsed=parseAttendance(raw.attendance,attOtParsed.map);
+      attParsed=(cfg.attendanceFormat==='shift_lookup_v2')
+        ?parseAttendancePkrV2_(raw.attendance,raw.shiftLookup,attIssueParsed.map,raw.shiftTypeRef,cfg.defaultShiftTypes)
+        :parseAttendance(raw.attendance,attIssueParsed.map);
       renderAll();
       if(document.getElementById('page-audit-profile')&&document.getElementById('page-audit-profile').classList.contains('active')) apFilterDirectoryGrid();
       setSt('ok');
@@ -2375,12 +2410,13 @@ function doSaveSlaWeekRemark_(text,token,team,agent,month,week,wrid,btn){
   }
 }
 
-// ── OT (DAY OFF) / LEAVE SUBMISSION MODAL — writes to the "OT DayOff" /
+// ── ISSUE DAY (OT Day-Off / System-Software Issue) / LEAVE SUBMISSION
+// MODAL — both buttons live on the Schedule page. Writes to the "Issue Day" /
 // "Leave Requests" tabs in the Attendance Google Sheet, same
 // apRequestToken_() + Sheets API append pattern as doSaveSlaWeekRemark_()
 // above. No approval step — a successful write takes effect immediately the
 // next time attParsed/attLeaveParsed are rebuilt (done right after append).
-var submitMode_=null; // 'ot' | 'leave'
+var submitMode_=null; // 'issue' | 'leave'
 
 // Every agent who has at least one Attendance row on file, for the picker —
 // simplest reliable source since it's already loaded and always Internal CS.
@@ -2398,16 +2434,32 @@ function buildAgentOptionsHtml_(){
 function fieldLbl_(txt){ return '<label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">'+txt+'</label>'; }
 var SUBMIT_INPUT_CSS_='width:100%;margin-bottom:12px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px;border-radius:6px;font-family:var(--font);box-sizing:border-box';
 
-function openOtSubmitModal(){
-  submitMode_='ot';
-  document.getElementById('submit-icon').textContent='⚡';
-  document.getElementById('submit-title-text').textContent=lang==='zh'?'提交 OT（Day Off 上班）':'Submit OT (Day Off)';
-  document.getElementById('submit-sub-text').textContent=lang==='zh'?'提交后，该日期不再判定迟到/早退/超时休息/异常':'Late / early-out / extra-break / anomaly checks are skipped for this date';
+function openIssueDaySubmitModal(){
+  submitMode_='issue';
+  document.getElementById('submit-icon').textContent='🐞';
+  document.getElementById('submit-title-text').textContent=lang==='zh'?'提交 Issue Day':'Submit Issue Day';
+  document.getElementById('submit-sub-text').textContent=lang==='zh'?'两种类型都会豁免当天 late/early；OT (Day Off) 照常计入出勤天数':'Both types skip that day\'s late/early check; OT (Day Off) still counts toward Days Present';
   document.getElementById('submit-body').innerHTML=
     fieldLbl_(lang==='zh'?'员工':'Agent')+'<select id="submit-agent" class="fsel" style="'+SUBMIT_INPUT_CSS_+'">'+buildAgentOptionsHtml_()+'</select>'+
-    fieldLbl_(lang==='zh'?'上班日期（Day Off 当天）':'Work Date (their day off)')+'<input type="date" id="submit-date" style="'+SUBMIT_INPUT_CSS_+'">'+
+    fieldLbl_(lang==='zh'?'类型':'Type')+
+      '<select id="submit-issue-type" class="fsel" style="'+SUBMIT_INPUT_CSS_+'" onchange="updateIssueTypeHint_()">'+
+        '<option value="OT_DAYOFF">'+(lang==='zh'?'OT（Day Off 上班）':'OT (Day Off)')+'</option>'+
+        '<option value="SYSTEM_ISSUE">'+(lang==='zh'?'系统/软件问题 System Issue':'System / Software Issue')+'</option>'+
+      '</select>'+
+    '<div id="submit-issue-hint" style="font-size:11px;color:var(--muted);margin:-6px 0 12px"></div>'+
+    fieldLbl_(lang==='zh'?'日期':'Date')+'<input type="date" id="submit-date" style="'+SUBMIT_INPUT_CSS_+'">'+
     fieldLbl_(lang==='zh'?'备注（可选）':'Note (optional)')+'<textarea id="submit-note" rows="2" style="'+SUBMIT_INPUT_CSS_+'"></textarea>';
   document.getElementById('submit-overlay').classList.add('open');
+  updateIssueTypeHint_();
+}
+function updateIssueTypeHint_(){
+  var sel=document.getElementById('submit-issue-type');
+  var hintEl=document.getElementById('submit-issue-hint');
+  if(!sel||!hintEl) return;
+  var isOt=sel.value==='OT_DAYOFF';
+  hintEl.textContent=isOt
+    ?(lang==='zh'?'豁免：late / early / 超时休息 / 异常打卡 — 仍计入出勤天数':'Forgives: late / early / extra-break / anomaly — still counts toward Days Present')
+    :(lang==='zh'?'豁免：仅 late / early（超时休息、异常打卡照常判定）':'Forgives: late / early ONLY (extra-break and anomaly checks still apply)');
 }
 
 function openLeaveSubmitModal(){
@@ -2457,13 +2509,14 @@ function submitOtOrLeave_(){
   if(btn){ btn.disabled=true; btn.textContent=lang==='zh'?'登录中…':'Signing in…'; }
   apRequestToken_(function(token){
     if(btn) btn.textContent=lang==='zh'?'提交中…':'Submitting…';
-    if(submitMode_==='ot') doSubmitOt_(token,psdId,name,note,btn);
+    if(submitMode_==='issue') doSubmitIssueDay_(token,psdId,name,note,btn);
     else doSubmitLeave_(token,psdId,name,note,btn);
   });
 }
 
-function doSubmitOt_(token,psdId,name,note,btn){
+function doSubmitIssueDay_(token,psdId,name,note,btn){
   var dateVal=(document.getElementById('submit-date')||{}).value;
+  var issueType=(document.getElementById('submit-issue-type')||{}).value||'OT_DAYOFF';
   if(!dateVal){ resetSubmitBtn_(btn); alert(lang==='zh'?'请选择日期':'Please pick a date'); return; }
   var cfg=REGION_CONFIG[currentRegion];
   if(!cfg.attendanceSheetId||cfg.attendanceSheetId.indexOf('PASTE_')===0){
@@ -2471,19 +2524,21 @@ function doSubmitOt_(token,psdId,name,note,btn){
     alert(lang==='zh'?'该地区还没有配置 Attendance Sheet ID，无法提交':'This region has no Attendance Sheet ID configured yet — can\'t submit');
     return;
   }
-  var tabName=(cfg.ranges.otDayOff||'OT DayOff!A1:F2000').split('!')[0];
+  var tabName=(cfg.ranges.issueDay||'Issue Day!A1:G2000').split('!')[0];
   var who=getSubmitWho_();
   if(who===null){ resetSubmitBtn_(btn); return; }
   var now=new Date().toLocaleString();
-  var appendUrl='https://sheets.googleapis.com/v4/spreadsheets/'+cfg.attendanceSheetId+'/values/'+encodeURIComponent(tabName+'!A1:F1')+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
-  fetch(appendUrl,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateVal,psdId,name,who,now,note]]})})
+  var appendUrl='https://sheets.googleapis.com/v4/spreadsheets/'+cfg.attendanceSheetId+'/values/'+encodeURIComponent(tabName+'!A1:G1')+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+  fetch(appendUrl,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateVal,psdId,name,issueType,who,now,note]]})})
     .then(function(r){return r.json();})
     .then(function(resp){
       if(resp&&resp.error) throw new Error(resp.error.message);
-      return fetchFromSheet_(cfg.attendanceSheetId,cfg.ranges.otDayOff).then(function(rows){
-        raw.otDayOff=rows;
-        attOtParsed=parseOtDayOff(raw.otDayOff);
-        attParsed=parseAttendance(raw.attendance,attOtParsed.map);
+      return fetchFromSheet_(cfg.attendanceSheetId,cfg.ranges.issueDay).then(function(rows){
+        raw.issueDay=rows;
+        attIssueParsed=parseIssueDay(raw.issueDay);
+        attParsed=(cfg.attendanceFormat==='shift_lookup_v2')
+          ?parseAttendancePkrV2_(raw.attendance,raw.shiftLookup,attIssueParsed.map,raw.shiftTypeRef,cfg.defaultShiftTypes)
+          :parseAttendance(raw.attendance,attIssueParsed.map);
         renderAttendance();
         renderSchedule();
         resetSubmitBtn_(btn); closeSubmitModal();
@@ -3033,12 +3088,8 @@ function attParseDateFlexible_(s){
 
 // ── OT (Day Off) submissions & Leave requests ──────────────────────────────
 // Both are written by THIS dashboard (via apRequestToken_ + Sheets API, same
-// pattern as SLA Remarks) into their own tabs inside the Attendance Google
-// Sheet file, so — unlike the Attendance sheet itself, whose Date format we
-// don't control — every Date/Start/End value here is always a plain ISO
-// "YYYY-MM-DD" string from a native <input type="date">. That lets us parse
-// it exactly, with no guessing.
-// "OT DayOff" tab columns: Date | PSD-ID | Name | SubmittedBy | Timestamp | Note
+// "Issue Day" tab columns: Date | PSD-ID | Name | Type | SubmittedBy | Timestamp | Note
+// (Type is one of OT_DAYOFF / SYSTEM_ISSUE — see ISSUE_TYPES above)
 // "Leave Requests" tab columns: PSD-ID | Name | Type | Start Date | End Date | SubmittedBy | Timestamp | Note
 function otIsoToParts_(iso){
   var m=String(iso||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -3070,8 +3121,10 @@ function findHeaderRow_(rows,pattern){
   return 0;
 }
 // Returns {map, list}. map is keyed "normPsd||Mon||day" -> submission row, for
-// O(1) lookup from inside parseAttendance() below.
-function parseOtDayOff(rows){
+// O(1) lookup from inside parseAttendance() below. Every submission carries a
+// `type` (OT_DAYOFF or SYSTEM_ISSUE) that decides exactly what gets forgiven
+// for that day — see the ISSUE_TYPES-driven logic inside parseAttendance().
+function parseIssueDay(rows){
   var map={}, list=[];
   if(!rows||!rows.length) return {map:map,list:list};
   var hdrIdx=findHeaderRow_(rows,/psd/i);
@@ -3082,8 +3135,10 @@ function parseOtDayOff(rows){
     if(!dateStr||!psd) continue;
     var p=otIsoToParts_(dateStr);
     if(!p) continue;
-    var entry={date:dateStr,month:p.month,day:p.day,psdId:psd,name:String(row[2]||'').trim(),
-      submittedBy:String(row[3]||'').trim(),timestamp:String(row[4]||'').trim(),note:String(row[5]||'').trim(),rowNum:r+1};
+    var typeRaw=String(row[3]||'').trim().toUpperCase();
+    var type=ISSUE_TYPES[typeRaw]?typeRaw:'OT_DAYOFF'; // old rows written before the Type column existed default to OT_DAYOFF
+    var entry={date:dateStr,month:p.month,day:p.day,psdId:psd,name:String(row[2]||'').trim(),type:type,
+      submittedBy:String(row[4]||'').trim(),timestamp:String(row[5]||'').trim(),note:String(row[6]||'').trim(),rowNum:r+1};
     list.push(entry);
     map[normPsd_(psd)+'||'+p.month+'||'+p.day]=entry;
   }
@@ -3120,11 +3175,12 @@ function parseLeaveRequests(rows){
   return {byAgentDay:byAgentDay,list:list};
 }
 
-// otMap: result of parseOtDayOff(...).map — days flagged there are excluded
-// from Days Present / Late / Early / Extra Break / Anomaly entirely (per the
-// "day off OT shouldn't count as a check-in/out problem" business rule),
-// while still showing up in the Daily Records table tagged "⚡ OT".
-function parseAttendance(rows,otMap){
+// issueMap: result of parseIssueDay(...).map — days flagged there are exempt
+// from late/early always, and ALSO from extra-break/anomaly + Days Present
+// exclusion when the submission type is OT_DAYOFF specifically (see
+// ISSUE_TYPES). A SYSTEM_ISSUE submission only forgives late/early — the day
+// still counts fully as present, since the agent really was there.
+function parseAttendance(rows,issueMap){
   var out={ byAgentMonth:{}, monthList:[], rowsRaw:[], remarks:[], anomalies:[], totalRowsSeen:0, unparsedDateSamples:[] };
   if(!rows||!rows.length) return out;
   var hdrIdx=-1,hdr=null;
@@ -3191,20 +3247,25 @@ function parseAttendance(rows,otMap){
     var isExtraBreakDay=totalBreakMin>ATT_EXTRA_BREAK_THRESHOLD_MIN;
     var extraBreakMin=isExtraBreakDay?(totalBreakMin-ATT_EXTRA_BREAK_THRESHOLD_MIN):0;
 
-    // Day-off OT submission for this exact agent+date? If so, this row is a
-    // voluntary OT shift on what was supposed to be a day off — none of the
-    // usual check-in/out "problems" (late, early, extra break, anomalous
-    // work) should count against the agent, and the day itself shouldn't add
-    // to Days Present either (it wasn't a scheduled work day).
-    var isOtDayOff=!!(otMap&&otMap[normPsd_(psd)+'||'+mo+'||'+day]);
-    if(isOtDayOff){ isLate=false; lateMin=0; isEarly=false; earlyMin=0; isExtraBreakDay=false; extraBreakMin=0; }
+    // Issue Day submission for this exact agent+date? Two flavors, see
+    // ISSUE_TYPES: OT_DAYOFF forgives late/early/extra-break/anomaly (an
+    // agent working a day off isn't "late" for it); SYSTEM_ISSUE forgives
+    // ONLY late/early (a tech glitch mis-recorded the check-in/out time —
+    // everything else about the row, including Days Present, is still real).
+    var issueEntry=issueMap&&issueMap[normPsd_(psd)+'||'+mo+'||'+day];
+    var issueType=issueEntry?issueEntry.type:null;
+    var issueCfg=issueType?ISSUE_TYPES[issueType]:null;
+    if(issueCfg){
+      isLate=false; lateMin=0; isEarly=false; earlyMin=0;
+      if(issueCfg.suppressExtraBreakAnomaly){ isExtraBreakDay=false; extraBreakMin=0; }
+    }
 
     var checkInVal=col.checkIn!==undefined?String(row[col.checkIn]||'').trim():'';
     var checkOutVal=col.checkOut!==undefined?String(row[col.checkOut]||'').trim():'';
     // Likely a missed/broken check-out, not a real 0-hour or 16+-hour shift —
     // keep the raw Work Duration visible in the table, but exclude it from
     // Avg Work Duration and flag it for manual review in the sheet.
-    var isAnomalousWork=!isOtDayOff&&(((checkInVal||checkOutVal)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
+    var isAnomalousWork=!(issueCfg&&issueCfg.suppressExtraBreakAnomaly)&&(((checkInVal||checkOutVal)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
 
     var name=col.name!==undefined?String(row[col.name]||'').trim():'';
     var entry={
@@ -3222,7 +3283,7 @@ function parseAttendance(rows,otMap){
       specialBreakMin:specialBreakMin, specialBreakCount:specialBreakCnt,
       extraBreakMin:extraBreakMin, isExtraBreakDay:isExtraBreakDay,
       remark:col.remark!==undefined?String(row[col.remark]||'').trim():'',
-      isOtDayOff:isOtDayOff
+      issueType:issueType, isOtDayOff:issueType==='OT_DAYOFF' // kept for back-compat with existing UI checks below
     };
     out.rowsRaw.push(entry);
     if(entry.remark) out.remarks.push({date:dateStr,month:mo,day:day,psdId:psd,name:name,remark:entry.remark});
@@ -3238,29 +3299,27 @@ function parseAttendance(rows,otMap){
         specialBreakCountTotal:0, specialBreakMinTotal:0,
         workDurationMinTotal:0, totalBreakMinTotal:0, breakCountTotal:0,
         anomalyDays:0, anomalyDayDetails:[],
-        otDayOffCount:0,
+        otDayOffCount:0, systemIssueCount:0,
         days:[]
       };
     }
     var agg=out.byAgentMonth[key];
     if(name&&name.length>agg.name.length) agg.name=name; // prefer the more complete spelling if it varies
-    if(isOtDayOff){
-      // Fully exempted day: doesn't add to any "problem" counter, doesn't add
-      // to Days Present, doesn't add to the work/break totals those rates are
-      // averaged over — just tallied separately for visibility.
-      agg.otDayOffCount++;
-    } else {
-      if(isLate){ agg.lateCount++; agg.lateMinTotal+=lateMin; }
-      if(isEarly){ agg.earlyCount++; agg.earlyMinTotal+=earlyMin; }
-      if(isExtraBreakDay){ agg.extraBreakDays++; agg.extraBreakMinTotal+=extraBreakMin; }
-      agg.shortBreakCountTotal+=shortBreakCnt;
-      agg.shortBreakMinTotal+=shortBreakMin;
-      agg.specialBreakCountTotal+=specialBreakCnt;
-      agg.specialBreakMinTotal+=specialBreakMin;
-      agg.workDurationMinTotal+=workDurationMin;
-      agg.totalBreakMinTotal+=totalBreakMin;
-      agg.breakCountTotal+=breakCount;
-    }
+    if(issueType==='OT_DAYOFF') agg.otDayOffCount++;
+    if(issueType==='SYSTEM_ISSUE') agg.systemIssueCount++;
+    // Both issue types still count fully toward Days Present / work & break
+    // totals now — the agent really was there. Only the "problem" counters
+    // (late/early, and extra-break+anomaly for OT_DAYOFF) get skipped above.
+    if(isLate){ agg.lateCount++; agg.lateMinTotal+=lateMin; }
+    if(isEarly){ agg.earlyCount++; agg.earlyMinTotal+=earlyMin; }
+    if(isExtraBreakDay){ agg.extraBreakDays++; agg.extraBreakMinTotal+=extraBreakMin; }
+    agg.shortBreakCountTotal+=shortBreakCnt;
+    agg.shortBreakMinTotal+=shortBreakMin;
+    agg.specialBreakCountTotal+=specialBreakCnt;
+    agg.specialBreakMinTotal+=specialBreakMin;
+    agg.workDurationMinTotal+=workDurationMin;
+    agg.totalBreakMinTotal+=totalBreakMin;
+    agg.breakCountTotal+=breakCount;
     agg.days.push(entry);
     monthsSeen[mo]=true;
   }
@@ -3275,7 +3334,9 @@ function parseAttendance(rows,otMap){
   Object.values(out.byAgentMonth).forEach(function(agg){
     var byDay={};
     agg.days.forEach(function(e){
-      if(e.isOtDayOff) return; // day-off OT doesn't count toward Days Present
+      // Issue Day submissions (OT or System Issue) now count toward Days
+      // Present same as any other real check-in — only the problem counters
+      // above are exempted, not attendance itself.
       if(!byDay[e.day]) byDay[e.day]={day:e.day,date:e.date,count:0};
       byDay[e.day].count++;
     });
@@ -3309,6 +3370,365 @@ function parseAttendance(rows,otMap){
   return out;
 }
 
+// ── PKR "Daily Summary"-format Attendance parsing (v2) ──────────────────────
+// Used only for regions with REGION_CONFIG[region].attendanceFormat==='shift_lookup_v2'
+// (currently just PKR). The raw sheet has NO Shift / Late Check-In / Early
+// Check-Out columns anymore, so all three are DERIVED here instead of read
+// directly:
+//  • Day vs Night — whichever half of the clock (AM/PM) that day's Check In
+//    actually falls in.
+//  • Late — the agent's own baseline Check-In time, looked up from the
+//    "Shift" reference block (PSD No -> Time) elsewhere in the same sheet,
+//    applied to whichever half-day they punched in that day (so someone who
+//    swaps between Day/Night still gets judged against the right baseline).
+//    Later than baseline by even a minute = late.
+//  • Early Check-Out — Work Duration under a full 12:00:00, same rule for
+//    everyone, unrelated to Day/Night.
+//  • Extra Break — the "≥5 min" bucket over 90min OR the "<5 min" bucket
+//    over 15min (checked independently) flags the day; the Special Break
+//    bucket (120min) is recorded but never counted as a violation.
+// Returns the exact same {byAgentMonth, rowsRaw, remarks, anomalies, ...}
+// shape as parseAttendance() above, so every existing render function
+// (Attendance page, Schedule page, Daily Records, Export Report) works
+// completely unchanged regardless of which parser produced attParsed.
+
+var PKR_LATE_TOLERANCE_MIN=0; // minutes of grace before a late Check-In counts — 0 per "even 9:01 counts"
+var PKR_EARLY_CHECKOUT_MIN=12*60; // Work Duration must be >= this many minutes, or it's an early check-out
+var PKR_BREAK_5MIN_LIMIT=90;   // "Total Duration >=5 mins Break" — violation past this
+var PKR_BREAK_LT5MIN_LIMIT=15; // "Total Duration <5 mins Break" — violation past this
+// PKR_BREAK_SPECIAL_LIMIT (120min) is intentionally NOT enforced as a violation — recorded only.
+
+// {psdKey -> {hour, minute}}, from the "Shift" lookup block. As of the
+// PKR/INR/PHP standardization, this block is 5 columns: Project | PSD No |
+// Agent Name | Time | AM/PM (Project column added for consistency, not used
+// for the lookup itself — only PSD No + Time matter here). The Time cell is
+// text like "9.00" / "7.30" (a period standing in for a colon) — BUT Google
+// Sheets often strips one trailing zero from a number-formatted cell like
+// this (7.30 -> "7.3", 9.00 -> "9"), so a single-digit fraction is treated
+// as a stripped trailing zero and padded back out (".3" -> ":30"), not read
+// as ":03".
+//
+// The main Attendance data's Employee ID column doesn't always carry the
+// same prefix as this Shift block's PSD No (e.g. INR's Attendance rows just
+// say "10763" while the Shift block says "CG 10763" for the same person) —
+// so besides the normal exact-normalized key, every entry is ALSO indexed
+// by digits-only, as a fallback. Whichever way a row is matched, the
+// SHIFT BLOCK's fuller "CG-10763"-style ID becomes the display PSD ID for
+// that agent from here on (see canonicalId below and its use in
+// parseAttendancePkrV2_) — the sheet with the complete ID format wins.
+function pkrExtractDigits_(s){ return String(s||'').replace(/\D/g,''); }
+function pkrCanonicalPsdId_(raw){
+  var s=String(raw||'').trim();
+  var m=s.match(/^([A-Za-z]+)[\s\-]*([0-9]+)$/);
+  if(m) return m[1].toUpperCase()+'-'+m[2];
+  return s;
+}
+// Generic "shift type" reference table — a short list of {label, baseline
+// time} pairs anywhere off to the side of the Shift block (e.g. INR's
+// AM=7:30 / MID=11:00 / PM=19:30). Column position isn't assumed: every row
+// is scanned for the first time-like cell ("7.30", "11.00", ...), and
+// whatever's immediately to its left is taken as that shift's label. Regions
+// without this table (nothing found) get an empty list back, which makes
+// pkrNearestBaseline_ below fall back to just the per-agent AM/PM baseline —
+// fully backward compatible with PKR's simpler two-shift setup.
+function pkrParseShiftTypeRef_(rows){
+  var list=[];
+  if(!rows||!rows.length) return list;
+  rows.forEach(function(row){
+    for(var c=1;c<row.length;c++){
+      var cell=String(row[c]||'').trim();
+      var m=cell.match(/^(\d{1,2})[.:](\d{1,2})$/);
+      if(m){
+        var label=String(row[c-1]||'').trim();
+        // Guard against accidentally picking up something that isn't really
+        // a shift label (a stray number, a long sentence, etc) — real shift
+        // labels are always short (AM / MID / PM / NIGHT...).
+        if(label&&label.length<=8&&!/\d/.test(label)){
+          var hour=parseInt(m[1],10);
+          var minStr=m[2]; if(minStr.length===1) minStr+='0';
+          var minute=parseInt(minStr,10);
+          if(hour>=0&&hour<=23&&minute>=0&&minute<=59) list.push({label:label,totalMin:hour*60+minute});
+        }
+        break; // one time-like value per row is enough
+      }
+    }
+  });
+  return list;
+}
+// Picks whichever candidate baseline (personal AM/PM + any shiftTypeRef
+// entries, all merged into one pool) sits CLOSEST to the actual Check In,
+// on a circular 24h clock (so 11:58 PM and 12:02 AM count as 4 minutes
+// apart, not ~23.9 hours). Returns {label, totalMin} or null if there were
+// no candidates at all (no personal baseline AND no shiftTypeRef table).
+function pkrNearestBaseline_(checkInTotalMin,candidates){
+  var best=null,bestDist=Infinity;
+  candidates.forEach(function(c){
+    if(!c) return;
+    var d=Math.abs(checkInTotalMin-c.totalMin);
+    d=Math.min(d,1440-d);
+    if(d<bestDist){ bestDist=d; best=c; }
+  });
+  return best;
+}
+
+function pkrParseShiftLookup_(rows){
+  var byExact={}, byDigits={}, byName={};
+  if(!rows||!rows.length) return {byExact:byExact,byDigits:byDigits,byName:byName};
+  var hdrIdx=findHeaderRow_(rows,/psd/i);
+  for(var r=hdrIdx+1;r<rows.length;r++){
+    var row=rows[r]||[];
+    var psdRaw=String(row[1]||'').trim();
+    var nameRaw=String(row[2]||'').trim();
+    var timeRaw=String(row[3]||'').trim();
+    if((!psdRaw&&!nameRaw)||!timeRaw) continue;
+    var m=timeRaw.match(/^(\d{1,2})(?:[.:](\d{1,2}))?$/);
+    if(!m) continue;
+    var hour=parseInt(m[1],10);
+    var minStr=m[2]||'0';
+    if(minStr.length===1) minStr+='0'; // "7.3" -> "30" (assume a stripped trailing zero)
+    var minute=parseInt(minStr,10);
+    if(hour<0||hour>23||minute<0||minute>59) continue;
+    var entry={hour:hour,minute:minute,totalMin:hour*60+minute,canonicalId:psdRaw?pkrCanonicalPsdId_(psdRaw):nameRaw};
+    if(psdRaw){
+      byExact[normPsd_(psdRaw)]=entry;
+      var digits=pkrExtractDigits_(psdRaw);
+      if(digits) byDigits[digits]=entry;
+    }
+    // Name-based fallback — needed for rows where the main Attendance data's
+    // Employee ID cell is blank (nothing to match a PSD against at all), but
+    // the Employee Name is still there and matches this Shift block's Agent
+    // Name. Loose match (normNameLoose_) the same way Position lookups
+    // already do, so word-order/nickname differences don't break it either.
+    var looseName=nameRaw?normNameLoose_(nameRaw):'';
+    if(looseName) byName[looseName]=entry;
+  }
+  return {byExact:byExact,byDigits:byDigits,byName:byName};
+}
+// Pulls the clock time (24h) out of a Check In / Check Out cell, regardless
+// of which of the date-time formats we've seen it written in (e.g.
+// "2026/4/18 9:00" or "04/18/2026 09:01 PM").
+function pkrParseClockTime_(raw){
+  var s=String(raw||'').trim();
+  if(!s) return null;
+  var m=s.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+  if(!m) return null;
+  var h=parseInt(m[1],10), mi=parseInt(m[2],10);
+  var ap=m[3]?m[3].toUpperCase():null;
+  if(ap==='PM'&&h<12) h+=12;
+  if(ap==='AM'&&h===12) h=0;
+  if(h<0||h>23||mi<0||mi>59) return null;
+  return {hour:h,minute:mi,totalMin:h*60+mi,isPM:h>=12};
+}
+// Parses "Duration of Work" / break-duration cells ("12:01:00", "1:28:53",
+// H:MM:SS) into total minutes. Falls back to 0 for blank/unparseable cells.
+function pkrParseDurationMin_(raw){
+  var s=String(raw||'').trim();
+  if(!s) return 0;
+  var m=s.match(/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/);
+  if(!m) return 0;
+  var h=parseInt(m[1],10), mi=parseInt(m[2],10), se=m[3]?parseInt(m[3],10):0;
+  return h*60+mi+se/60;
+}
+function pkrParseDate_(s){
+  var str=String(s===undefined||s===null?'':s).trim();
+  if(!str) return null;
+  var iso=str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(iso){
+    var mi=parseInt(iso[2],10);
+    if(mi>=1&&mi<=12) return {month:ATT_MO_ABBR[mi-1],day:parseInt(iso[3],10)};
+  }
+  var slash=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(slash){
+    var a=parseInt(slash[1],10), b=parseInt(slash[2],10);
+    if(a>=1&&a<=12) return {month:ATT_MO_ABBR[a-1],day:b}; // M/D/Y
+  }
+  return null;
+}
+
+function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultShiftTypes){
+  var out={ byAgentMonth:{}, monthList:[], rowsRaw:[], remarks:[], anomalies:[], totalRowsSeen:0, unparsedDateSamples:[] };
+  if(!rows||!rows.length) return out;
+  var shiftMap=pkrParseShiftLookup_(shiftRows);
+  var shiftTypes=pkrParseShiftTypeRef_(shiftTypeRefRows);
+  if(!shiftTypes.length&&defaultShiftTypes&&defaultShiftTypes.length) shiftTypes=defaultShiftTypes;
+  var hdrIdx=findHeaderRow_(rows,/employee\s*id/i);
+  var monthsSeen={};
+  for(var r=hdrIdx+1;r<rows.length;r++){
+    var row=rows[r]||[];
+    var dateStr=String(row[0]||'').trim();
+    var psd=String(row[1]||'').trim();
+    var name=String(row[2]||'').trim();
+    if(!dateStr&&!psd) continue;
+    out.totalRowsSeen++;
+    var dp=pkrParseDate_(dateStr);
+    if(!dp){ if(out.unparsedDateSamples.length<5) out.unparsedDateSamples.push(dateStr); continue; }
+    var mo=dp.month, day=dp.day;
+
+    // Baseline lookup: try the exact-normalized PSD first, then fall back to
+    // matching by digits-only (handles sheets like INR where the main
+    // Attendance data drops the "CG" prefix that the Shift block still has).
+    // Whichever way it matches, the Shift block's fuller ID (e.g.
+    // "CG-10763") becomes this agent's DISPLAYED psdId from here on — not
+    // the bare number from the Attendance row.
+    var baseline=shiftMap.byExact[normPsd_(psd)]||shiftMap.byDigits[pkrExtractDigits_(psd)]||(name?shiftMap.byName[normNameLoose_(name)]:null);
+    var displayPsd=(baseline&&baseline.canonicalId)?baseline.canonicalId:(psd||name);
+
+    var checkInRaw=String(row[4]||'').trim();
+    var checkOutRaw=String(row[5]||'').trim();
+    var checkIn=pkrParseClockTime_(checkInRaw);
+    var workDurationMin=pkrParseDurationMin_(row[6]);
+    var break5Min=pkrParseDurationMin_(row[7]);
+    var break5Cnt=parseInt(row[8],10)||0;
+    var breakLt5Min=pkrParseDurationMin_(row[9]);
+    var breakLt5Cnt=parseInt(row[10],10)||0;
+    var breakSpecialMin=pkrParseDurationMin_(row[11]);
+    var breakSpecialCnt=parseInt(row[12],10)||0;
+    var totalBreakMin=break5Min+breakLt5Min+breakSpecialMin;
+    var breakCount=break5Cnt+breakLt5Cnt+breakSpecialCnt;
+
+    // Which shift baseline actually applies today: merge this agent's own
+    // AM/PM baseline (from the Shift lookup) with every entry in the generic
+    // shiftTypes reference table (AM/MID/PM, etc — see pkrParseShiftTypeRef_)
+    // into one candidate pool, then pick whichever sits CLOSEST to the real
+    // Check In. This is what correctly puts an ~11:00 check-in on a MID
+    // baseline instead of comparing it against a 7:30 AM baseline just
+    // because 11:00 is still technically "AM" by the clock.
+    var matchedBaseline=null, shiftLabel='';
+    if(checkIn){
+      var candidates=shiftTypes.slice();
+      if(baseline){
+        candidates.push({label:'AM',totalMin:(baseline.hour%12)*60+baseline.minute});
+        candidates.push({label:'PM',totalMin:(baseline.hour%12+12)*60+baseline.minute});
+      }
+      matchedBaseline=pkrNearestBaseline_(checkIn.totalMin,candidates);
+    }
+    var isNightShift=matchedBaseline?(matchedBaseline.totalMin>=720):(checkIn?checkIn.isPM:false);
+    shiftLabel=matchedBaseline?matchedBaseline.label:(checkIn?(isNightShift?'Night':'Day'):'');
+
+    // Late: however that baseline was determined above, later than it (even
+    // by a minute) counts as late.
+    var isLate=false, lateMin=0;
+    if(checkIn&&matchedBaseline){
+      var diff=checkIn.totalMin-matchedBaseline.totalMin-PKR_LATE_TOLERANCE_MIN;
+      if(diff>0){ isLate=true; lateMin=diff; }
+    }
+
+    // Early Check-Out: flat 12:00:00 requirement, unrelated to Day/Night.
+    var isEarly=false, earlyMin=0;
+    if(checkOutRaw){
+      isEarly=workDurationMin<PKR_EARLY_CHECKOUT_MIN;
+      if(isEarly) earlyMin=PKR_EARLY_CHECKOUT_MIN-workDurationMin;
+    }
+
+    // Extra Break: the >=5min and <5min buckets are checked INDEPENDENTLY —
+    // Special Break (120min) is recorded but never flagged.
+    var over5=Math.max(0,break5Min-PKR_BREAK_5MIN_LIMIT);
+    var overLt5=Math.max(0,breakLt5Min-PKR_BREAK_LT5MIN_LIMIT);
+    var isExtraBreakDay=over5>0||overLt5>0;
+    var extraBreakMin=over5+overLt5;
+
+    var issueEntry=issueMap&&issueMap[normPsd_(displayPsd)+'||'+mo+'||'+day];
+    var issueType=issueEntry?issueEntry.type:null;
+    var issueCfg=issueType?ISSUE_TYPES[issueType]:null;
+    if(issueCfg){
+      isLate=false; lateMin=0; isEarly=false; earlyMin=0;
+      if(issueCfg.suppressExtraBreakAnomaly){ isExtraBreakDay=false; extraBreakMin=0; }
+    }
+
+    var isAnomalousWork=!(issueCfg&&issueCfg.suppressExtraBreakAnomaly)&&(((checkInRaw||checkOutRaw)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
+
+    var entry={
+      date:dateStr, month:mo, day:day,
+      psdId:displayPsd, name:name,
+      project:String(row[3]||'').trim(),
+      shift:shiftLabel,
+      checkIn:checkInRaw, checkOut:checkOutRaw,
+      lateRaw:isLate?('Late '+Math.round(lateMin)+'m'):(checkIn?'On Time':''), isLate:isLate, lateMin:lateMin,
+      earlyRaw:isEarly?('Early '+Math.round(earlyMin)+'m'):(checkOutRaw?'OK':''), isEarly:isEarly, earlyMin:earlyMin,
+      workDurationMin:workDurationMin, isAnomalousWork:isAnomalousWork,
+      totalBreakMin:totalBreakMin, breakCount:breakCount,
+      break5Min:break5Min, break5Count:break5Cnt,
+      breakLt5Min:breakLt5Min, breakLt5Count:breakLt5Cnt,
+      breakSpecialMin:breakSpecialMin, breakSpecialCount:breakSpecialCnt,
+      // Kept for compatibility with the legacy field names other render
+      // functions read (shortBreak* == <5min bucket, specialBreak* as-is).
+      shortBreakMin:breakLt5Min, shortBreakCount:breakLt5Cnt,
+      specialBreakMin:breakSpecialMin, specialBreakCount:breakSpecialCnt,
+      extraBreakMin:extraBreakMin, isExtraBreakDay:isExtraBreakDay,
+      remark:String(row[13]||'').trim(),
+      issueType:issueType, isOtDayOff:issueType==='OT_DAYOFF'
+    };
+    out.rowsRaw.push(entry);
+    if(entry.remark) out.remarks.push({date:dateStr,month:mo,day:day,psdId:displayPsd,name:name,remark:entry.remark});
+    if(isAnomalousWork) out.anomalies.push({date:dateStr,month:mo,day:day,psdId:displayPsd,name:name,checkIn:checkInRaw,checkOut:checkOutRaw,workDurationMin:workDurationMin});
+
+    var key=mo+'||'+normPsd_(displayPsd);
+    if(!out.byAgentMonth[key]){
+      out.byAgentMonth[key]={
+        month:mo, psdId:displayPsd, name:name, project:entry.project,
+        daysPresent:0, lateCount:0, lateMinTotal:0, earlyCount:0, earlyMinTotal:0,
+        extraBreakDays:0, extraBreakMinTotal:0,
+        shortBreakCountTotal:0, shortBreakMinTotal:0,
+        specialBreakCountTotal:0, specialBreakMinTotal:0,
+        workDurationMinTotal:0, totalBreakMinTotal:0, breakCountTotal:0,
+        anomalyDays:0, anomalyDayDetails:[],
+        otDayOffCount:0, systemIssueCount:0,
+        days:[]
+      };
+    }
+    var agg=out.byAgentMonth[key];
+    if(name&&name.length>agg.name.length) agg.name=name;
+    if(issueType==='OT_DAYOFF') agg.otDayOffCount++;
+    if(issueType==='SYSTEM_ISSUE') agg.systemIssueCount++;
+    if(isLate){ agg.lateCount++; agg.lateMinTotal+=lateMin; }
+    if(isEarly){ agg.earlyCount++; agg.earlyMinTotal+=earlyMin; }
+    if(isExtraBreakDay){ agg.extraBreakDays++; agg.extraBreakMinTotal+=extraBreakMin; }
+    agg.shortBreakCountTotal+=breakLt5Cnt;
+    agg.shortBreakMinTotal+=breakLt5Min;
+    agg.specialBreakCountTotal+=breakSpecialCnt;
+    agg.specialBreakMinTotal+=breakSpecialMin;
+    agg.workDurationMinTotal+=workDurationMin;
+    agg.totalBreakMinTotal+=totalBreakMin;
+    agg.breakCountTotal+=breakCount;
+    agg.days.push(entry);
+    monthsSeen[mo]=true;
+  }
+
+  out.duplicateCheckins=[];
+  Object.values(out.byAgentMonth).forEach(function(agg){
+    var byDay={};
+    agg.days.forEach(function(e){
+      if(!byDay[e.day]) byDay[e.day]={day:e.day,date:e.date,count:0};
+      byDay[e.day].count++;
+    });
+    var dayKeys=Object.keys(byDay);
+    agg.daysPresent=dayKeys.length;
+    var dupDays=dayKeys.map(function(d){return byDay[d];}).filter(function(d){return d.count>=2;})
+      .sort(function(a,b){return a.day-b.day;});
+    agg.anomalyDays=dupDays.length;
+    agg.anomalyDayDetails=dupDays;
+    dupDays.forEach(function(d){
+      out.duplicateCheckins.push({date:d.date,month:agg.month,day:d.day,psdId:agg.psdId,name:agg.name,count:d.count});
+    });
+    var daysInMonth=ATT_MO_DAYS_2026[ATT_MO_IDX[agg.month]]||30;
+    agg.daysInMonth=daysInMonth;
+    agg.daysOff=Math.max(0,daysInMonth-agg.daysPresent);
+    agg.attendanceRate=daysInMonth>0?(agg.daysPresent/daysInMonth):0;
+    agg.punctualityRate=agg.daysPresent>0?((agg.daysPresent-agg.lateCount)/agg.daysPresent):0;
+    agg.avgWorkDurationMin=agg.daysPresent>0?(agg.workDurationMinTotal/agg.daysPresent):0;
+  });
+  out.duplicateCheckins.sort(function(a,b){
+    var ka=(ATT_MO_IDX[a.month]||0)*100+(a.day||0), kb=(ATT_MO_IDX[b.month]||0)*100+(b.day||0);
+    return kb-ka;
+  });
+  out.monthList=ATT_MO_ORDER.filter(function(m){return monthsSeen[m];});
+  out.remarks.sort(function(a,b){
+    var ka=(ATT_MO_IDX[a.month]||0)*100+(a.day||0), kb=(ATT_MO_IDX[b.month]||0)*100+(b.day||0);
+    return kb-ka;
+  });
+  return out;
+}
+
 // Merges every per-agent-month aggregate matching a month filter ("all"/"H1"/"H2"/
 // a specific "Jan".."Dec") into ONE row per agent — same filter vocabulary as the
 // rest of the dashboard's month dropdowns. Rates are recomputed from the summed
@@ -3328,7 +3748,7 @@ function attAggregateForFilter_(attData,monthFilter){
         shortBreakCountTotal:0,shortBreakMinTotal:0,
         specialBreakCountTotal:0,specialBreakMinTotal:0,
         workDurationMinTotal:0,totalBreakMinTotal:0,breakCountTotal:0,
-        anomalyDays:0,anomalyDayDetails:[],otDayOffCount:0
+        anomalyDays:0,anomalyDayDetails:[],otDayOffCount:0,systemIssueCount:0
       };
     }
     var a=byPsd[key];
@@ -3345,6 +3765,7 @@ function attAggregateForFilter_(attData,monthFilter){
     a.breakCountTotal+=agg.breakCountTotal;
     a.anomalyDays+=(agg.anomalyDays||0);
     a.otDayOffCount+=(agg.otDayOffCount||0);
+    a.systemIssueCount+=(agg.systemIssueCount||0);
     if(agg.anomalyDayDetails&&agg.anomalyDayDetails.length){
       a.anomalyDayDetails=a.anomalyDayDetails.concat(agg.anomalyDayDetails.map(function(d){return Object.assign({month:agg.month},d);}));
     }
@@ -5140,7 +5561,7 @@ function renderAttendance(){
 
   // Team-wide KPI cards
   var totalPresent=0,totalInMonth=0,totalLateCnt=0,totalLateMin=0,totalEarlyCnt=0,totalEarlyMin=0;
-  var totalExtraDays=0,totalExtraMin=0,totalWorkMin=0,totalOff=0,totalAnomalyDays=0,totalOtDayOff=0;
+  var totalExtraDays=0,totalExtraMin=0,totalWorkMin=0,totalOff=0,totalAnomalyDays=0,totalOtDayOff=0,totalSystemIssue=0;
   list.forEach(function(a){
     totalPresent+=a.daysPresent; totalInMonth+=a.daysInMonth; totalOff+=a.daysOff;
     totalLateCnt+=a.lateCount; totalLateMin+=a.lateMinTotal;
@@ -5149,6 +5570,7 @@ function renderAttendance(){
     totalWorkMin+=a.workDurationMinTotal;
     totalAnomalyDays+=(a.anomalyDays||0);
     totalOtDayOff+=(a.otDayOffCount||0);
+    totalSystemIssue+=(a.systemIssueCount||0);
   });
   var attRate=totalInMonth>0?(totalPresent/totalInMonth):0;
   var puncRate=totalPresent>0?((totalPresent-totalLateCnt)/totalPresent):0;
@@ -5165,7 +5587,9 @@ function renderAttendance(){
   setText_('att-extra',totalExtraDays);
   setText_('att-extra-d',attFmtHM_(totalExtraMin)+' total over allowance');
   setText_('att-anomaly',totalAnomalyDays);
-  setText_('att-otdayoff',totalOtDayOff);
+  setText_('att-otdayoff',totalOtDayOff+totalSystemIssue);
+  var issueDayDetailEl=document.getElementById('att-issueday-d');
+  if(issueDayDetailEl) issueDayDetailEl.textContent=totalOtDayOff+' OT (Day Off) · '+totalSystemIssue+' System Issue';
 
   renderAttendanceTable();
   renderAttendanceDailyPanel();
@@ -5354,8 +5778,10 @@ function renderAttendanceDailyPanel(){
   tbody.innerHTML=days.map(function(d){
     var dupN=dayCounts[d.month+'-'+d.day]||1;
     var isDup=dupN>=2;
-    var otBadge=d.isOtDayOff?'<span style="color:var(--purple);font-weight:700" title="Submitted OT on a day off — late/early/extra-break/anomaly checks are skipped for this day">⚡ OT (Day Off)</span>':'';
-    return '<tr'+(isDup?' style="background:rgba(255,64,129,0.08)"':(d.isOtDayOff?' style="background:rgba(155,127,244,0.07)"':''))+'>'+
+    var issueBadge=d.issueType==='SYSTEM_ISSUE'
+      ?'<span style="color:var(--amber);font-weight:700" title="Reported as a system/software check-in issue — late/early checks are skipped for this day">🐞 System Issue</span>'
+      :(d.issueType==='OT_DAYOFF'?'<span style="color:var(--purple);font-weight:700" title="Submitted OT on a day off — late/early/extra-break/anomaly checks are skipped, but the day still counts as present">⚡ OT (Day Off)</span>':'');
+    return '<tr'+(isDup?' style="background:rgba(255,64,129,0.08)"':(d.issueType?' style="background:rgba(155,127,244,0.07)"':''))+'>'+
       '<td style="white-space:nowrap">'+d.date+(isDup?' <span style="color:var(--red);font-weight:700" title="Duplicate check-in: '+dupN+' rows this day">⚠️ x'+dupN+'</span>':'')+'</td>'+
       '<td style="white-space:nowrap">'+(d.shift||'—')+'</td>'+
       '<td style="white-space:nowrap">'+(d.checkIn||'—')+'</td>'+
@@ -5364,7 +5790,7 @@ function renderAttendanceDailyPanel(){
       '<td style="white-space:nowrap'+(d.isEarly?';color:var(--red);font-weight:700':'')+'">'+(d.earlyRaw||'—')+'</td>'+
       '<td style="white-space:nowrap">'+(d.workDurationMin?attFmtHM_(d.workDurationMin):'—')+'</td>'+
       '<td style="white-space:nowrap'+(d.isExtraBreakDay?';color:var(--red);font-weight:700':'')+'">'+(d.totalBreakMin?attFmtHM_(d.totalBreakMin):'—')+'</td>'+
-      '<td style="white-space:normal;color:var(--amber)">'+(otBadge?(otBadge+(d.remark?' · ':'')):'')+(d.remark||'')+'</td>'+
+      '<td style="white-space:normal;color:var(--amber)">'+(issueBadge?(issueBadge+(d.remark?' · ':'')):'')+(d.remark||'')+'</td>'+
     '</tr>';
   }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No daily records for this filter</td></tr>';
 }
@@ -5402,6 +5828,7 @@ function applyScheduleFilters(){
 function schedNormShift_(raw){
   var s=String(raw||'').trim().toLowerCase();
   if(!s) return 'day'; // Shift column blank but a check-in row exists — assume Day
+  if(/^mid$/.test(s)) return 'mid';
   if(/night|n\b|^n$|pm/.test(s)) return 'night';
   return 'day';
 }
@@ -5507,8 +5934,8 @@ function renderSchedule(){
     headHtml+='<th>'+d+'</th>';
     subHtml+='<th style="color:var(--dim)">'+dow+'</th>';
   }
-  headHtml+='<th class="sched-sum-first">Day</th><th>Night</th><th>Off</th></tr>';
-  subHtml+='<th class="sched-sum-first">&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th></tr>';
+  headHtml+='<th class="sched-sum-first">Day</th><th>Mid</th><th>Night</th><th>Off</th></tr>';
+  subHtml+='<th class="sched-sum-first">&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th></tr>';
 
   var bodyHtml=agents.map(function(a){
     var profile=findAgentProfile_(a.key,a.name);
@@ -5516,7 +5943,7 @@ function renderSchedule(){
     var row='<tr><td class="sched-col-name" title="'+a.name+'">'+a.name+'</td>'+
       '<td class="sched-col-psd">'+a.psdId+'</td>'+
       '<td class="sched-col-pos" title="'+position+'">'+position+'</td>';
-    var dayCount=0,nightCount=0,offCount=0,leaveCount=0;
+    var dayCount=0,midCount=0,nightCount=0,offCount=0,leaveCount=0;
     for(var d2=1;d2<=daysInMonth;d2++){
       var leave=attLeaveParsed.byAgentDay[normPsd_(a.psdId)+'||'+schedMonthFilter+'||'+d2];
       var rec=byAgentDay[a.key+'-'+d2];
@@ -5529,23 +5956,27 @@ function renderSchedule(){
         offCount++;
         row+='<td><div class="sched-cell-inner sched-off" title="'+a.name+' · '+schedMonthFilter+' '+d2+' · Day Off">OFF</div></td>';
       } else {
-        var isNight=schedNormShift_(rec.shift)==='night';
-        if(isNight) nightCount++; else dayCount++;
-        var flagged=(rec.isLate||rec.isEarly)&&!rec.isOtDayOff;
-        var cls='sched-cell-inner '+(isNight?'sched-night':'sched-day')+(flagged?' sched-flag':'')+(rec.isOtDayOff?' sched-ot':'');
-        var tip=a.name+' · '+rec.date+' · '+(isNight?'Night':'Day')+' shift'+
+        var shiftKind=schedNormShift_(rec.shift); // 'day' | 'mid' | 'night'
+        if(shiftKind==='mid') midCount++; else if(shiftKind==='night') nightCount++; else dayCount++;
+        var shiftLetter=shiftKind==='mid'?'M':(shiftKind==='night'?'N':'D');
+        var shiftWord=shiftKind==='mid'?'Mid':(shiftKind==='night'?'Night':'Day');
+        var flagged=(rec.isLate||rec.isEarly)&&!rec.issueType;
+        var issueColor=rec.issueType==='SYSTEM_ISSUE'?'var(--amber)':(rec.issueType?'var(--purple)':null);
+        var cls='sched-cell-inner sched-'+shiftKind+(flagged?' sched-flag':'')+(rec.issueType?' sched-ot':'');
+        var tip=a.name+' · '+rec.date+' · '+shiftWord+' shift'+
           (rec.checkIn?(' · In '+rec.checkIn):'')+(rec.checkOut?(' · Out '+rec.checkOut):'')+
-          (rec.isOtDayOff?' · ⚡ OT (Day Off)':'')+
+          (rec.issueType?(' · '+(ISSUE_TYPES[rec.issueType]?ISSUE_TYPES[rec.issueType].label:rec.issueType)):'')+
           (flagged&&rec.isLate?' · LATE':'')+(flagged&&rec.isEarly?' · EARLY OUT':'');
-        row+='<td><div class="'+cls+'" title="'+tip.replace(/"/g,'&quot;')+'"'+(rec.isOtDayOff?' style="box-shadow:inset 0 0 0 1.5px var(--purple)"':'')+'>'+(isNight?'N':'D')+'</div></td>';
+        row+='<td><div class="'+cls+'" title="'+tip.replace(/"/g,'&quot;')+'"'+(issueColor?' style="box-shadow:inset 0 0 0 1.5px '+issueColor+'"':'')+'>'+shiftLetter+'</div></td>';
       }
     }
     row+='<td class="sched-sum-cell sched-sum-day sched-sum-first">'+dayCount+'</td>'+
+      '<td class="sched-sum-cell sched-sum-mid">'+midCount+'</td>'+
       '<td class="sched-sum-cell sched-sum-night">'+nightCount+'</td>'+
       '<td class="sched-sum-cell sched-sum-off">'+offCount+'</td>';
     row+='</tr>';
     return row;
-  }).join('') || '<tr><td colspan="'+(daysInMonth+6)+'" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--font)">No agents match this filter</td></tr>';
+  }).join('') || '<tr><td colspan="'+(daysInMonth+7)+'" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--font)">No agents match this filter</td></tr>';
 
   var wrap=document.getElementById('sched-grid-wrap');
   if(wrap) wrap.innerHTML='<table class="sched-tbl"><thead>'+headHtml+subHtml+'</thead><tbody>'+bodyHtml+'</tbody></table>';
@@ -5579,14 +6010,14 @@ function buildScheduleReportHtml_(){
     headRow1+='<th>'+d+'</th>';
     headRow2+='<th class="dow">'+dow+'</th>';
   }
-  headRow1+='<th class="sum">Day</th><th class="sum">Night</th><th class="sum">Off</th>';
-  headRow2+='<th class="sum"></th><th class="sum"></th><th class="sum"></th>';
+  headRow1+='<th class="sum">Day</th><th class="sum">Mid</th><th class="sum">Night</th><th class="sum">Off</th>';
+  headRow2+='<th class="sum"></th><th class="sum"></th><th class="sum"></th><th class="sum"></th>';
 
   var gridRows=agents.map(function(a){
     var profile=findAgentProfile_(a.key,a.name);
     var position=(profile&&profile.position)?profile.position:'—';
     var row='<tr><td class="nm nm-agent">'+esc(a.name)+'</td><td class="nm nm-psd">'+esc(a.psdId)+'</td><td class="nm nm-pos">'+esc(position)+'</td>';
-    var dayCount=0,nightCount=0,offCount=0;
+    var dayCount=0,midCount=0,nightCount=0,offCount=0;
     for(var d2=1;d2<=daysInMonth;d2++){
       var leave=attLeaveParsed.byAgentDay[normPsd_(a.psdId)+'||'+schedMonthFilter+'||'+d2];
       var rec=byAgentDay[a.key+'-'+d2];
@@ -5597,14 +6028,15 @@ function buildScheduleReportHtml_(){
         offCount++;
         row+='<td><div class="cell off">OFF</div></td>';
       } else {
-        var isNight=schedNormShift_(rec.shift)==='night';
-        if(isNight) nightCount++; else dayCount++;
-        var flagged=(rec.isLate||rec.isEarly)&&!rec.isOtDayOff;
-        var tip=(rec.checkIn?('In '+rec.checkIn+' '):'')+(rec.checkOut?('Out '+rec.checkOut+' '):'')+(rec.isOtDayOff?'OT (Day Off) ':'')+(flagged&&rec.isLate?'LATE ':'')+(flagged&&rec.isEarly?'EARLY':'');
-        row+='<td><div class="cell '+(isNight?'night':'day')+(flagged?' flag':'')+'" title="'+esc(tip.trim())+'">'+(isNight?'N':'D')+'</div></td>';
+        var shiftKind=schedNormShift_(rec.shift);
+        if(shiftKind==='mid') midCount++; else if(shiftKind==='night') nightCount++; else dayCount++;
+        var shiftLetter=shiftKind==='mid'?'M':(shiftKind==='night'?'N':'D');
+        var flagged=(rec.isLate||rec.isEarly)&&!rec.issueType;
+        var tip=(rec.checkIn?('In '+rec.checkIn+' '):'')+(rec.checkOut?('Out '+rec.checkOut+' '):'')+(rec.issueType?((ISSUE_TYPES[rec.issueType]?ISSUE_TYPES[rec.issueType].label:rec.issueType)+' '):'')+(flagged&&rec.isLate?'LATE ':'')+(flagged&&rec.isEarly?'EARLY':'');
+        row+='<td><div class="cell '+shiftKind+(flagged?' flag':'')+'" title="'+esc(tip.trim())+'">'+shiftLetter+'</div></td>';
       }
     }
-    row+='<td class="sum sumday">'+dayCount+'</td><td class="sum sumnight">'+nightCount+'</td><td class="sum sumoff">'+offCount+'</td></tr>';
+    row+='<td class="sum sumday">'+dayCount+'</td><td class="sum summid">'+midCount+'</td><td class="sum sumnight">'+nightCount+'</td><td class="sum sumoff">'+offCount+'</td></tr>';
     return row;
   }).join('');
 
@@ -5633,7 +6065,7 @@ function buildScheduleReportHtml_(){
     '<style>'+
     ':root{--bg:#0a0d16;--card:#131928;--border:#1a2035;--border2:#243050;--text:#e2e8f0;--muted:#64748b;'+
     '--teal:#00b0ff;--teal-d:rgba(0,176,255,0.12);--purple:#9b7ff4;--purple-d:rgba(155,127,244,0.12);'+
-    '--amber:#ff9100;--red:#ff4081;--dim:#2d3748;}'+
+    '--amber:#ff9100;--amber-d:rgba(255,145,0,0.12);--red:#ff4081;--dim:#2d3748;}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:13px;padding:28px}'+
     '.wrap{max-width:1320px;margin:0 auto}'+
@@ -5654,6 +6086,7 @@ function buildScheduleReportHtml_(){
     'td.nm-pos{color:var(--muted)}'+
     '.cell{width:20px;height:20px;margin:1px auto;border-radius:4px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}'+
     '.cell.day{background:var(--teal-d);color:var(--teal)}'+
+    '.cell.mid{background:var(--amber-d);color:var(--amber)}'+
     '.cell.night{background:var(--purple-d);color:var(--purple)}'+
     '.cell.off{background:transparent;color:var(--dim);font-size:8px;opacity:.55}'+
     '.cell.flag{box-shadow:0 0 0 1.5px var(--red)}'+
@@ -5669,13 +6102,14 @@ function buildScheduleReportHtml_(){
     '<div class="meta">Generated '+esc(new Date().toLocaleString())+' · Internal CS only · Built from Attendance check-in records</div>'+
     '<div class="legend">'+
       '<span><span class="sw" style="background:var(--teal)"></span>Day</span>'+
+      '<span><span class="sw" style="background:var(--amber)"></span>Mid</span>'+
       '<span><span class="sw" style="background:var(--purple)"></span>Night</span>'+
       '<span><span class="sw" style="background:var(--dim);border:1px solid var(--border)"></span>Off</span>'+
       '<span><span class="sw" style="background:var(--card);box-shadow:0 0 0 1.5px var(--red)"></span>Late / Early</span>'+
     '</div>'+
     '<h2>Calendar — '+esc(schedMonthFilter)+'</h2>'+
     '<div class="gridwrap"><table><thead><tr>'+headRow1+'</tr><tr>'+headRow2+'</tr></thead><tbody>'+
-      (gridRows||'<tr><td colspan="'+(daysInMonth+6)+'" style="text-align:center;color:var(--muted);padding:20px">No agents match this filter</td></tr>')+
+      (gridRows||'<tr><td colspan="'+(daysInMonth+7)+'" style="text-align:center;color:var(--muted);padding:20px">No agents match this filter</td></tr>')+
     '</tbody></table></div>'+
     '<h2>Attendance Summary — '+esc(schedMonthFilter)+' <span style="color:var(--muted);font-weight:400;font-size:11px">(auto-calculated: Late / Early days &amp; minutes)</span></h2>'+
     '<div class="gridwrap"><table class="stattbl"><thead><tr>'+
