@@ -963,7 +963,8 @@ body.light select option{background:#ffffff;color:#0c1e35}
         </select></div>
         <div class="filter-div"></div>
         <span class="filter-info" id="att-filter-info">All Months</span>
-        <span style="margin-left:auto;font-size:10px;color:var(--muted);font-family:var(--mono)">Internal CS only -- Outsource attendance isn't tracked</span>
+        <button class="ref-btn" style="margin-left:auto" onclick="openOtSubmitModal()" title="Submit a day-off OT shift so this dashboard stops treating that day's check-in/out as late/early/etc."><i class="fa-solid fa-bolt"></i> Submit OT (Day Off)</button>
+        <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">Internal CS only -- Outsource attendance isn't tracked</span>
       </div>
 
       <div id="att-empty" class="ap-noprofile" style="display:none">No attendance data loaded for this region yet -- check REGION_CONFIG's attendanceSheetId.</div>
@@ -980,6 +981,7 @@ body.light select option{background:#ffffff;color:#0c1e35}
           <div class="kpi c-red"><div class="kpi-lbl">Early Check-Out</div><div class="kpi-val" id="att-early">-</div><div class="kpi-d" id="att-early-d">- min total</div></div>
           <div class="kpi c-red"><div class="kpi-lbl">Extra Break (over 90min/day)</div><div class="kpi-val" id="att-extra">-</div><div class="kpi-d" id="att-extra-d">- min total over allowance</div></div>
           <div class="kpi c-red"><div class="kpi-lbl">⚠️ Anomaly (Dup. Check-In)</div><div class="kpi-val" id="att-anomaly">-</div><div class="kpi-d" id="att-anomaly-d">agent-days with 2+ punches same day</div></div>
+          <div class="kpi c-purple"><div class="kpi-lbl">⚡ OT (Day Off)</div><div class="kpi-val" id="att-otdayoff">-</div><div class="kpi-d">submitted — excluded from late/early/etc.</div></div>
         </div>
 
         <div class="panel" style="margin-top:14px">
@@ -1035,11 +1037,15 @@ body.light select option{background:#ffffff;color:#0c1e35}
         <div class="filter-div"></div>
         <input id="sched-search" type="text" placeholder="Search name or PSD-ID..." oninput="renderSchedule()" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:11px;padding:6px 10px;border-radius:6px;width:180px;font-family:var(--font)">
         <button class="ref-btn" onclick="exportSchedule()" title="Export the current month/agent filter as a standalone HTML report"><i class="fa-solid fa-download"></i> Export Report</button>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);font-family:var(--mono)">
+        <button class="ref-btn" onclick="openLeaveSubmitModal()" title="Submit a UPL / Sick / Annual leave request — shown as a label on the schedule only"><i class="fa-solid fa-umbrella-beach"></i> Submit Leave</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);font-family:var(--mono);flex-wrap:wrap">
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--teal);vertical-align:middle;margin-right:4px"></span>Day</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--purple);vertical-align:middle;margin-right:4px"></span>Night</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--dim);vertical-align:middle;margin-right:4px"></span>Off</span>
           <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid var(--red);vertical-align:middle;margin-right:4px"></span>Late/Early</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #ff9100;vertical-align:middle;margin-right:4px"></span>UPL</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #ff4081;vertical-align:middle;margin-right:4px"></span>Sick</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--card);border:1.5px solid #00b0ff;vertical-align:middle;margin-right:4px"></span>Annual</span>
         </div>
       </div>
 
@@ -1126,6 +1132,27 @@ body.light select option{background:#ffffff;color:#0c1e35}
   </div>
 </div>
 
+<!-- OT (DAY OFF) / LEAVE SUBMISSION MODAL — shared by the Attendance page's
+     "Submit OT (Day Off)" button and the Schedule page's "Submit Leave"
+     button. openOtSubmitModal()/openLeaveSubmitModal() fill #submit-body
+     with the right fields; submitOtOrLeave_() reads them back out. -->
+<div class="zoom-overlay" id="submit-overlay" onclick="if(event.target===this)closeSubmitModal()">
+  <div class="detail-box" id="submit-box" style="width:min(440px,92vw)">
+    <div class="detail-head">
+      <div>
+        <div class="detail-title"><span id="submit-icon">—</span> <span id="submit-title-text">—</span></div>
+        <div class="detail-sub" id="submit-sub-text"></div>
+      </div>
+      <button class="zoom-close" onclick="closeSubmitModal()">✕</button>
+    </div>
+    <div class="detail-body" id="submit-body" style="padding:16px 20px 4px"></div>
+    <div class="detail-foot" style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="ref-btn" onclick="closeSubmitModal()">Cancel</button>
+      <button class="ref-btn" id="submit-save-btn" style="border-color:var(--purple);color:var(--purple)" onclick="submitOtOrLeave_()">💾 Submit</button>
+    </div>
+  </div>
+</div>
+
 <!-- AGENT AUDIT PROFILE MODAL -->
 <div class="zoom-overlay" id="agent-profile-overlay" onclick="if(event.target===this)closeAgentProfileModal()">
   <div class="zoom-box" style="width:min(1040px,94vw);height:min(820px,92vh)">
@@ -1177,7 +1204,14 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300',
       profile:'CS Detail!A1:AF500',
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:'Attendance Report!A1:Q20000' // confirm this matches the real tab name at the bottom of the Attendance sheet
+      attendance:'Attendance Report!A1:Q20000', // confirm this matches the real tab name at the bottom of the Attendance sheet
+      // NEW — Day-off OT / Leave submissions. Live in the same Attendance
+      // Google Sheet file (attendanceSheetId), as their own tabs. Create these
+      // two tabs there with the header rows described just above
+      // parseOtDayOff()/parseLeaveRequests() if they don't exist yet — the
+      // dashboard will just show empty state until they do.
+      otDayOff:'OT DayOff!A1:F2000',
+      leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','CX Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
     brands:['CX','MP','BJ','BV','Welcome'],
@@ -1199,7 +1233,9 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300',
       profile:'CS Detail!A1:AF500', // widened past S so a fuller Outsource block (Project/Position/Performance/Task/Remark/Status) isn't truncated
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:''
+      attendance:'',
+      otDayOff:'OT DayOff!A1:F2000',
+      leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
     brands:['CX','MP','BJ','JW','DP','KV8','HB','SBJ','SP'],
@@ -1219,7 +1255,9 @@ var REGION_CONFIG={
       slaOut:'Outsource SLA Metrics!A1:AD300', // tab exists but is currently empty — UI auto-hides Outsource panels until data appears
       profile:'CS Detail!A1:AF500',
       slaRemarks:'SLA Remarks!A1:G2000',
-      attendance:''
+      attendance:'',
+      otDayOff:'OT DayOff!A1:F2000',
+      leaveRequests:'Leave Requests!A1:H2000'
     },
     tabNames:['Daily Chat Report','Internal SLA Metrics','Outsource SLA Metrics','QA Error Diagnostics','CS Detail','SLA Remarks'],
     brands:['BJ','BV'],
@@ -1284,6 +1322,13 @@ var qaMonth='all';
 var qaAgent='all';
 var slaParsed=null;
 var attParsed=null;
+var attOtParsed={map:{},list:[]};       // Day-off OT submissions (Attendance page)
+var attLeaveParsed={byAgentDay:{},list:[]}; // Leave requests (Schedule page)
+var LEAVE_TYPES={
+  UPL:{short:'UPL',full:'UPL (Unpaid Leave)',color:'#ff9100'},
+  SICK:{short:'SL',full:'Sick Leave',color:'#ff4081'},
+  ANNUAL:{short:'AL',full:'Annual Leave',color:'#00b0ff'}
+};
 var slaMonth='all';
 var slaWeek='all';
 var slaAgent='all';
@@ -1718,13 +1763,14 @@ function loadAll(){
   try{
     setSt('loading');
     var cfg=REGION_CONFIG[currentRegion];
-    var keys=['sla','daily','qa','slaOut','profile','slaRemarks','attendance'];
-    var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut,cfg.ranges.profile,cfg.ranges.slaRemarks,cfg.ranges.attendance];
+    var keys=['sla','daily','qa','slaOut','profile','slaRemarks','attendance','otDayOff','leaveRequests'];
+    var ranges=[cfg.ranges.sla,cfg.ranges.daily,cfg.ranges.qa,cfg.ranges.slaOut,cfg.ranges.profile,cfg.ranges.slaRemarks,cfg.ranges.attendance,cfg.ranges.otDayOff,cfg.ranges.leaveRequests];
     // Attendance lives in its own Google Sheet file (separate sheetId) — everything
     // else shares the region's main sheetId. A missing/placeholder attendanceSheetId
     // just means no attendance data for this region yet (page/section stay empty,
     // nothing errors out) — same "quietly skip" pattern already used for slaOut.
-    var sheetIds=[cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.attendanceSheetId];
+    // OT DayOff / Leave Requests live as extra tabs in that SAME attendance file.
+    var sheetIds=[cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.sheetId,cfg.attendanceSheetId,cfg.attendanceSheetId,cfg.attendanceSheetId];
     var promises=ranges.map(function(range,idx){
       var sid=sheetIds[idx];
       if(!range||!sid||sid.indexOf('PASTE_')===0){ raw[keys[idx]]=[]; return Promise.resolve(); }
@@ -1750,7 +1796,9 @@ function loadAll(){
       outsourceRoster=buildAgentRoster_(raw.slaOut);
       AGENT_PROFILE_DATA=parseAgentProfileSheet(raw.profile);
       slaRemarksMap=buildSlaRemarksMap_(raw.slaRemarks);
-      attParsed=parseAttendance(raw.attendance);
+      attOtParsed=parseOtDayOff(raw.otDayOff);
+      attLeaveParsed=parseLeaveRequests(raw.leaveRequests);
+      attParsed=parseAttendance(raw.attendance,attOtParsed.map);
       renderAll();
       if(document.getElementById('page-audit-profile')&&document.getElementById('page-audit-profile').classList.contains('active')) apFilterDirectoryGrid();
       setSt('ok');
@@ -2328,6 +2376,153 @@ function doSaveSlaWeekRemark_(text,token,team,agent,month,week,wrid,btn){
   }
 }
 
+// ── OT (DAY OFF) / LEAVE SUBMISSION MODAL — writes to the "OT DayOff" /
+// "Leave Requests" tabs in the Attendance Google Sheet, same
+// apRequestToken_() + Sheets API append pattern as doSaveSlaWeekRemark_()
+// above. No approval step — a successful write takes effect immediately the
+// next time attParsed/attLeaveParsed are rebuilt (done right after append).
+var submitMode_=null; // 'ot' | 'leave'
+
+// Every agent who has at least one Attendance row on file, for the picker —
+// simplest reliable source since it's already loaded and always Internal CS.
+function buildAgentOptionsHtml_(){
+  var seen={},opts=[];
+  (attParsed&&attParsed.rowsRaw||[]).forEach(function(r){
+    var k=normPsd_(r.psdId);
+    if(seen[k]) return; seen[k]=true;
+    opts.push({psdId:r.psdId,name:r.name||r.psdId});
+  });
+  opts.sort(function(a,b){return a.name.localeCompare(b.name);});
+  if(!opts.length) return '<option value="">'+(lang==='zh'?'（没有可选的员工 — 请先加载考勤数据）':'(no agents available — load Attendance data first)')+'</option>';
+  return opts.map(function(o){return '<option value="'+o.psdId.replace(/"/g,'&quot;')+'">'+o.name+' ('+o.psdId+')</option>';}).join('');
+}
+function fieldLbl_(txt){ return '<label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">'+txt+'</label>'; }
+var SUBMIT_INPUT_CSS_='width:100%;margin-bottom:12px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px;border-radius:6px;font-family:var(--font);box-sizing:border-box';
+
+function openOtSubmitModal(){
+  submitMode_='ot';
+  document.getElementById('submit-icon').textContent='⚡';
+  document.getElementById('submit-title-text').textContent=lang==='zh'?'提交 OT（Day Off 上班）':'Submit OT (Day Off)';
+  document.getElementById('submit-sub-text').textContent=lang==='zh'?'提交后，该日期不再判定迟到/早退/超时休息/异常':'Late / early-out / extra-break / anomaly checks are skipped for this date';
+  document.getElementById('submit-body').innerHTML=
+    fieldLbl_(lang==='zh'?'员工':'Agent')+'<select id="submit-agent" class="fsel" style="'+SUBMIT_INPUT_CSS_+'">'+buildAgentOptionsHtml_()+'</select>'+
+    fieldLbl_(lang==='zh'?'上班日期（Day Off 当天）':'Work Date (their day off)')+'<input type="date" id="submit-date" style="'+SUBMIT_INPUT_CSS_+'">'+
+    fieldLbl_(lang==='zh'?'备注（可选）':'Note (optional)')+'<textarea id="submit-note" rows="2" style="'+SUBMIT_INPUT_CSS_+'"></textarea>';
+  document.getElementById('submit-overlay').classList.add('open');
+}
+
+function openLeaveSubmitModal(){
+  submitMode_='leave';
+  document.getElementById('submit-icon').textContent='🏖️';
+  document.getElementById('submit-title-text').textContent=lang==='zh'?'提交请假申请':'Submit Leave Request';
+  document.getElementById('submit-sub-text').textContent=lang==='zh'?'只在 Schedule 页面显示标签，不影响 Attendance 数字':'Shown as a label on Schedule only — does not change Attendance numbers';
+  document.getElementById('submit-body').innerHTML=
+    fieldLbl_(lang==='zh'?'员工':'Agent')+'<select id="submit-agent" class="fsel" style="'+SUBMIT_INPUT_CSS_+'">'+buildAgentOptionsHtml_()+'</select>'+
+    fieldLbl_(lang==='zh'?'假期类型':'Leave Type')+
+      '<select id="submit-leave-type" class="fsel" style="'+SUBMIT_INPUT_CSS_+'">'+
+        '<option value="UPL">UPL — '+(lang==='zh'?'无薪假':'Unpaid Leave')+'</option>'+
+        '<option value="SICK">'+(lang==='zh'?'病假 Sick Leave':'Sick Leave')+'</option>'+
+        '<option value="ANNUAL">'+(lang==='zh'?'年假 Annual Leave':'Annual Leave')+'</option>'+
+      '</select>'+
+    '<div style="display:flex;gap:8px">'+
+      '<div style="flex:1">'+fieldLbl_(lang==='zh'?'开始日期':'Start Date')+'<input type="date" id="submit-date-start" style="'+SUBMIT_INPUT_CSS_+'"></div>'+
+      '<div style="flex:1">'+fieldLbl_(lang==='zh'?'结束日期（可留空=单日）':'End Date (blank = single day)')+'<input type="date" id="submit-date-end" style="'+SUBMIT_INPUT_CSS_+'"></div>'+
+    '</div>'+
+    fieldLbl_(lang==='zh'?'备注（可选）':'Note (optional)')+'<textarea id="submit-note" rows="2" style="'+SUBMIT_INPUT_CSS_+'"></textarea>';
+  document.getElementById('submit-overlay').classList.add('open');
+}
+function closeSubmitModal(){
+  var overlay=document.getElementById('submit-overlay');
+  if(overlay) overlay.classList.remove('open');
+}
+function resetSubmitBtn_(btn){ if(btn){ btn.disabled=false; btn.textContent='💾 '+(lang==='zh'?'提交':'Submit'); } }
+// Same "who's making this change" prompt as SLA Remarks, reusing the same
+// localStorage key so the person only has to type their name/initials once
+// across every write-back feature in this dashboard.
+function getSubmitWho_(){
+  var saved=''; try{ saved=localStorage.getItem('slaRemarkAuthor')||''; }catch(e){}
+  var who=prompt(lang==='zh'?'请输入你的名字/工号（会记录在提交记录里）：':'Enter your name/initials (recorded with this submission):',saved);
+  if(who===null) return null;
+  who=who||saved||'—';
+  try{ localStorage.setItem('slaRemarkAuthor',who); }catch(e){}
+  return who;
+}
+
+function submitOtOrLeave_(){
+  var btn=document.getElementById('submit-save-btn');
+  var agentSel=document.getElementById('submit-agent');
+  if(!agentSel||!agentSel.value){ alert(lang==='zh'?'请选择员工':'Please pick an agent'); return; }
+  var psdId=agentSel.value;
+  var name=agentSel.options[agentSel.selectedIndex].textContent.replace(/\s*\([^)]*\)\s*$/,'').trim();
+  var note=(document.getElementById('submit-note')||{}).value||'';
+  if(btn){ btn.disabled=true; btn.textContent=lang==='zh'?'登录中…':'Signing in…'; }
+  apRequestToken_(function(token){
+    if(btn) btn.textContent=lang==='zh'?'提交中…':'Submitting…';
+    if(submitMode_==='ot') doSubmitOt_(token,psdId,name,note,btn);
+    else doSubmitLeave_(token,psdId,name,note,btn);
+  });
+}
+
+function doSubmitOt_(token,psdId,name,note,btn){
+  var dateVal=(document.getElementById('submit-date')||{}).value;
+  if(!dateVal){ resetSubmitBtn_(btn); alert(lang==='zh'?'请选择日期':'Please pick a date'); return; }
+  var cfg=REGION_CONFIG[currentRegion];
+  if(!cfg.attendanceSheetId||cfg.attendanceSheetId.indexOf('PASTE_')===0){
+    resetSubmitBtn_(btn);
+    alert(lang==='zh'?'该地区还没有配置 Attendance Sheet ID，无法提交':'This region has no Attendance Sheet ID configured yet — can\'t submit');
+    return;
+  }
+  var tabName=(cfg.ranges.otDayOff||'OT DayOff!A1:F2000').split('!')[0];
+  var who=getSubmitWho_();
+  if(who===null){ resetSubmitBtn_(btn); return; }
+  var now=new Date().toLocaleString();
+  var appendUrl='https://sheets.googleapis.com/v4/spreadsheets/'+cfg.attendanceSheetId+'/values/'+encodeURIComponent(tabName+'!A1:F1')+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+  fetch(appendUrl,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateVal,psdId,name,who,now,note]]})})
+    .then(function(r){return r.json();})
+    .then(function(resp){
+      if(resp&&resp.error) throw new Error(resp.error.message);
+      return fetchFromSheet_(cfg.attendanceSheetId,cfg.ranges.otDayOff).then(function(rows){
+        raw.otDayOff=rows;
+        attOtParsed=parseOtDayOff(raw.otDayOff);
+        attParsed=parseAttendance(raw.attendance,attOtParsed.map);
+        renderAttendance();
+        renderSchedule();
+        resetSubmitBtn_(btn); closeSubmitModal();
+      });
+    })
+    .catch(function(e){ resetSubmitBtn_(btn); alert((lang==='zh'?'提交失败：':'Submit failed: ')+e.message); });
+}
+
+function doSubmitLeave_(token,psdId,name,note,btn){
+  var startVal=(document.getElementById('submit-date-start')||{}).value;
+  var endVal=(document.getElementById('submit-date-end')||{}).value||startVal;
+  var type=(document.getElementById('submit-leave-type')||{}).value||'UPL';
+  if(!startVal){ resetSubmitBtn_(btn); alert(lang==='zh'?'请选择开始日期':'Please pick a start date'); return; }
+  var cfg=REGION_CONFIG[currentRegion];
+  if(!cfg.attendanceSheetId||cfg.attendanceSheetId.indexOf('PASTE_')===0){
+    resetSubmitBtn_(btn);
+    alert(lang==='zh'?'该地区还没有配置 Attendance Sheet ID，无法提交':'This region has no Attendance Sheet ID configured yet — can\'t submit');
+    return;
+  }
+  var tabName=(cfg.ranges.leaveRequests||'Leave Requests!A1:H2000').split('!')[0];
+  var who=getSubmitWho_();
+  if(who===null){ resetSubmitBtn_(btn); return; }
+  var now=new Date().toLocaleString();
+  var appendUrl='https://sheets.googleapis.com/v4/spreadsheets/'+cfg.attendanceSheetId+'/values/'+encodeURIComponent(tabName+'!A1:H1')+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+  fetch(appendUrl,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({values:[[psdId,name,type,startVal,endVal,who,now,note]]})})
+    .then(function(r){return r.json();})
+    .then(function(resp){
+      if(resp&&resp.error) throw new Error(resp.error.message);
+      return fetchFromSheet_(cfg.attendanceSheetId,cfg.ranges.leaveRequests).then(function(rows){
+        raw.leaveRequests=rows;
+        attLeaveParsed=parseLeaveRequests(raw.leaveRequests);
+        renderSchedule();
+        resetSubmitBtn_(btn); closeSubmitModal();
+      });
+    })
+    .catch(function(e){ resetSubmitBtn_(btn); alert((lang==='zh'?'提交失败：':'Submit failed: ')+e.message); });
+}
+
 // ── AGENT ROSTER (used by 'roster' internalMode regions like PKR to tell Internal
 // and Outsource agents apart in the QA log, since brand can't be used there) ──────
 var internalRoster={ids:{},names:{}};
@@ -2837,7 +3032,100 @@ function attParseDateFlexible_(s){
   return null;
 }
 
-function parseAttendance(rows){
+// ── OT (Day Off) submissions & Leave requests ──────────────────────────────
+// Both are written by THIS dashboard (via apRequestToken_ + Sheets API, same
+// pattern as SLA Remarks) into their own tabs inside the Attendance Google
+// Sheet file, so — unlike the Attendance sheet itself, whose Date format we
+// don't control — every Date/Start/End value here is always a plain ISO
+// "YYYY-MM-DD" string from a native <input type="date">. That lets us parse
+// it exactly, with no guessing.
+// "OT DayOff" tab columns: Date | PSD-ID | Name | SubmittedBy | Timestamp | Note
+// "Leave Requests" tab columns: PSD-ID | Name | Type | Start Date | End Date | SubmittedBy | Timestamp | Note
+function otIsoToParts_(iso){
+  var m=String(iso||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return null;
+  var mi=parseInt(m[2],10);
+  if(mi<1||mi>12) return null;
+  return {month:ATT_MO_ABBR[mi-1],day:parseInt(m[3],10),year:parseInt(m[1],10)};
+}
+// Day-of-year serial for the fixed 2026 calendar this dashboard already
+// assumes elsewhere (ATT_MO_DAYS_2026) — lets a leave range walk cleanly
+// across month boundaries without needing a real Date object.
+function leaveDaySerial_(p){
+  var s=0; for(var i=0;i<ATT_MO_IDX[p.month];i++) s+=ATT_MO_DAYS_2026[i];
+  return s+p.day;
+}
+function leaveSerialToParts_(serial){
+  var d=serial;
+  for(var i=0;i<12;i++){
+    if(d<=ATT_MO_DAYS_2026[i]) return {month:ATT_MO_ORDER[i],day:d};
+    d-=ATT_MO_DAYS_2026[i];
+  }
+  return null;
+}
+function findHeaderRow_(rows,pattern){
+  for(var i=0;i<Math.min(rows.length,3);i++){
+    var r=rows[i]||[];
+    if(r.some(function(c){return pattern.test(String(c||''));})) return i;
+  }
+  return 0;
+}
+// Returns {map, list}. map is keyed "normPsd||Mon||day" -> submission row, for
+// O(1) lookup from inside parseAttendance() below.
+function parseOtDayOff(rows){
+  var map={}, list=[];
+  if(!rows||!rows.length) return {map:map,list:list};
+  var hdrIdx=findHeaderRow_(rows,/psd/i);
+  for(var r=hdrIdx+1;r<rows.length;r++){
+    var row=rows[r]||[];
+    var dateStr=String(row[0]||'').trim();
+    var psd=String(row[1]||'').trim();
+    if(!dateStr||!psd) continue;
+    var p=otIsoToParts_(dateStr);
+    if(!p) continue;
+    var entry={date:dateStr,month:p.month,day:p.day,psdId:psd,name:String(row[2]||'').trim(),
+      submittedBy:String(row[3]||'').trim(),timestamp:String(row[4]||'').trim(),note:String(row[5]||'').trim(),rowNum:r+1};
+    list.push(entry);
+    map[normPsd_(psd)+'||'+p.month+'||'+p.day]=entry;
+  }
+  return {map:map,list:list};
+}
+// Returns {byAgentDay, list}. byAgentDay is keyed "normPsd||Mon||day" -> {type,note,...},
+// one entry per calendar day covered by every submitted [start,end] range.
+function parseLeaveRequests(rows){
+  var byAgentDay={}, list=[];
+  if(!rows||!rows.length) return {byAgentDay:byAgentDay,list:list};
+  var hdrIdx=findHeaderRow_(rows,/psd/i);
+  for(var r=hdrIdx+1;r<rows.length;r++){
+    var row=rows[r]||[];
+    var psd=String(row[0]||'').trim();
+    if(!psd) continue;
+    var name=String(row[1]||'').trim();
+    var type=String(row[2]||'').trim().toUpperCase();
+    var startIso=String(row[3]||'').trim();
+    var endIso=String(row[4]||'').trim()||startIso;
+    var sp=otIsoToParts_(startIso), ep=otIsoToParts_(endIso);
+    if(!sp||!ep) continue;
+    var note=String(row[7]||'').trim();
+    var entry={psdId:psd,name:name,type:type,start:startIso,end:endIso,
+      submittedBy:String(row[5]||'').trim(),timestamp:String(row[6]||'').trim(),note:note,rowNum:r+1};
+    list.push(entry);
+    var s0=leaveDaySerial_(sp), s1=leaveDaySerial_(ep);
+    if(s1<s0){ var tmp=s0; s0=s1; s1=tmp; } // tolerate End < Start typos
+    for(var s=s0;s<=s1;s++){
+      var parts=leaveSerialToParts_(s);
+      if(!parts) continue;
+      byAgentDay[normPsd_(psd)+'||'+parts.month+'||'+parts.day]={type:type,note:note,psdId:psd,name:name};
+    }
+  }
+  return {byAgentDay:byAgentDay,list:list};
+}
+
+// otMap: result of parseOtDayOff(...).map — days flagged there are excluded
+// from Days Present / Late / Early / Extra Break / Anomaly entirely (per the
+// "day off OT shouldn't count as a check-in/out problem" business rule),
+// while still showing up in the Daily Records table tagged "⚡ OT".
+function parseAttendance(rows,otMap){
   var out={ byAgentMonth:{}, monthList:[], rowsRaw:[], remarks:[], anomalies:[], totalRowsSeen:0, unparsedDateSamples:[] };
   if(!rows||!rows.length) return out;
   var hdrIdx=-1,hdr=null;
@@ -2904,12 +3192,20 @@ function parseAttendance(rows){
     var isExtraBreakDay=totalBreakMin>ATT_EXTRA_BREAK_THRESHOLD_MIN;
     var extraBreakMin=isExtraBreakDay?(totalBreakMin-ATT_EXTRA_BREAK_THRESHOLD_MIN):0;
 
+    // Day-off OT submission for this exact agent+date? If so, this row is a
+    // voluntary OT shift on what was supposed to be a day off — none of the
+    // usual check-in/out "problems" (late, early, extra break, anomalous
+    // work) should count against the agent, and the day itself shouldn't add
+    // to Days Present either (it wasn't a scheduled work day).
+    var isOtDayOff=!!(otMap&&otMap[normPsd_(psd)+'||'+mo+'||'+day]);
+    if(isOtDayOff){ isLate=false; lateMin=0; isEarly=false; earlyMin=0; isExtraBreakDay=false; extraBreakMin=0; }
+
     var checkInVal=col.checkIn!==undefined?String(row[col.checkIn]||'').trim():'';
     var checkOutVal=col.checkOut!==undefined?String(row[col.checkOut]||'').trim():'';
     // Likely a missed/broken check-out, not a real 0-hour or 16+-hour shift —
     // keep the raw Work Duration visible in the table, but exclude it from
     // Avg Work Duration and flag it for manual review in the sheet.
-    var isAnomalousWork=((checkInVal||checkOutVal)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN;
+    var isAnomalousWork=!isOtDayOff&&(((checkInVal||checkOutVal)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
 
     var name=col.name!==undefined?String(row[col.name]||'').trim():'';
     var entry={
@@ -2926,7 +3222,8 @@ function parseAttendance(rows){
       shortBreakMin:shortBreakMin, shortBreakCount:shortBreakCnt,
       specialBreakMin:specialBreakMin, specialBreakCount:specialBreakCnt,
       extraBreakMin:extraBreakMin, isExtraBreakDay:isExtraBreakDay,
-      remark:col.remark!==undefined?String(row[col.remark]||'').trim():''
+      remark:col.remark!==undefined?String(row[col.remark]||'').trim():'',
+      isOtDayOff:isOtDayOff
     };
     out.rowsRaw.push(entry);
     if(entry.remark) out.remarks.push({date:dateStr,month:mo,day:day,psdId:psd,name:name,remark:entry.remark});
@@ -2942,21 +3239,29 @@ function parseAttendance(rows){
         specialBreakCountTotal:0, specialBreakMinTotal:0,
         workDurationMinTotal:0, totalBreakMinTotal:0, breakCountTotal:0,
         anomalyDays:0, anomalyDayDetails:[],
+        otDayOffCount:0,
         days:[]
       };
     }
     var agg=out.byAgentMonth[key];
     if(name&&name.length>agg.name.length) agg.name=name; // prefer the more complete spelling if it varies
-    if(isLate){ agg.lateCount++; agg.lateMinTotal+=lateMin; }
-    if(isEarly){ agg.earlyCount++; agg.earlyMinTotal+=earlyMin; }
-    if(isExtraBreakDay){ agg.extraBreakDays++; agg.extraBreakMinTotal+=extraBreakMin; }
-    agg.shortBreakCountTotal+=shortBreakCnt;
-    agg.shortBreakMinTotal+=shortBreakMin;
-    agg.specialBreakCountTotal+=specialBreakCnt;
-    agg.specialBreakMinTotal+=specialBreakMin;
-    agg.workDurationMinTotal+=workDurationMin;
-    agg.totalBreakMinTotal+=totalBreakMin;
-    agg.breakCountTotal+=breakCount;
+    if(isOtDayOff){
+      // Fully exempted day: doesn't add to any "problem" counter, doesn't add
+      // to Days Present, doesn't add to the work/break totals those rates are
+      // averaged over — just tallied separately for visibility.
+      agg.otDayOffCount++;
+    } else {
+      if(isLate){ agg.lateCount++; agg.lateMinTotal+=lateMin; }
+      if(isEarly){ agg.earlyCount++; agg.earlyMinTotal+=earlyMin; }
+      if(isExtraBreakDay){ agg.extraBreakDays++; agg.extraBreakMinTotal+=extraBreakMin; }
+      agg.shortBreakCountTotal+=shortBreakCnt;
+      agg.shortBreakMinTotal+=shortBreakMin;
+      agg.specialBreakCountTotal+=specialBreakCnt;
+      agg.specialBreakMinTotal+=specialBreakMin;
+      agg.workDurationMinTotal+=workDurationMin;
+      agg.totalBreakMinTotal+=totalBreakMin;
+      agg.breakCountTotal+=breakCount;
+    }
     agg.days.push(entry);
     monthsSeen[mo]=true;
   }
@@ -2971,6 +3276,7 @@ function parseAttendance(rows){
   Object.values(out.byAgentMonth).forEach(function(agg){
     var byDay={};
     agg.days.forEach(function(e){
+      if(e.isOtDayOff) return; // day-off OT doesn't count toward Days Present
       if(!byDay[e.day]) byDay[e.day]={day:e.day,date:e.date,count:0};
       byDay[e.day].count++;
     });
@@ -3023,7 +3329,7 @@ function attAggregateForFilter_(attData,monthFilter){
         shortBreakCountTotal:0,shortBreakMinTotal:0,
         specialBreakCountTotal:0,specialBreakMinTotal:0,
         workDurationMinTotal:0,totalBreakMinTotal:0,breakCountTotal:0,
-        anomalyDays:0,anomalyDayDetails:[]
+        anomalyDays:0,anomalyDayDetails:[],otDayOffCount:0
       };
     }
     var a=byPsd[key];
@@ -3039,6 +3345,7 @@ function attAggregateForFilter_(attData,monthFilter){
     a.workDurationMinTotal+=agg.workDurationMinTotal; a.totalBreakMinTotal+=agg.totalBreakMinTotal;
     a.breakCountTotal+=agg.breakCountTotal;
     a.anomalyDays+=(agg.anomalyDays||0);
+    a.otDayOffCount+=(agg.otDayOffCount||0);
     if(agg.anomalyDayDetails&&agg.anomalyDayDetails.length){
       a.anomalyDayDetails=a.anomalyDayDetails.concat(agg.anomalyDayDetails.map(function(d){return Object.assign({month:agg.month},d);}));
     }
@@ -4834,7 +5141,7 @@ function renderAttendance(){
 
   // Team-wide KPI cards
   var totalPresent=0,totalInMonth=0,totalLateCnt=0,totalLateMin=0,totalEarlyCnt=0,totalEarlyMin=0;
-  var totalExtraDays=0,totalExtraMin=0,totalWorkMin=0,totalOff=0,totalAnomalyDays=0;
+  var totalExtraDays=0,totalExtraMin=0,totalWorkMin=0,totalOff=0,totalAnomalyDays=0,totalOtDayOff=0;
   list.forEach(function(a){
     totalPresent+=a.daysPresent; totalInMonth+=a.daysInMonth; totalOff+=a.daysOff;
     totalLateCnt+=a.lateCount; totalLateMin+=a.lateMinTotal;
@@ -4842,6 +5149,7 @@ function renderAttendance(){
     totalExtraDays+=a.extraBreakDays; totalExtraMin+=a.extraBreakMinTotal;
     totalWorkMin+=a.workDurationMinTotal;
     totalAnomalyDays+=(a.anomalyDays||0);
+    totalOtDayOff+=(a.otDayOffCount||0);
   });
   var attRate=totalInMonth>0?(totalPresent/totalInMonth):0;
   var puncRate=totalPresent>0?((totalPresent-totalLateCnt)/totalPresent):0;
@@ -4858,6 +5166,7 @@ function renderAttendance(){
   setText_('att-extra',totalExtraDays);
   setText_('att-extra-d',attFmtHM_(totalExtraMin)+' total over allowance');
   setText_('att-anomaly',totalAnomalyDays);
+  setText_('att-otdayoff',totalOtDayOff);
 
   renderAttendanceTable();
   renderAttendanceDailyPanel();
@@ -5046,7 +5355,8 @@ function renderAttendanceDailyPanel(){
   tbody.innerHTML=days.map(function(d){
     var dupN=dayCounts[d.month+'-'+d.day]||1;
     var isDup=dupN>=2;
-    return '<tr'+(isDup?' style="background:rgba(255,64,129,0.08)"':'')+'>'+
+    var otBadge=d.isOtDayOff?'<span style="color:var(--purple);font-weight:700" title="Submitted OT on a day off — late/early/extra-break/anomaly checks are skipped for this day">⚡ OT (Day Off)</span>':'';
+    return '<tr'+(isDup?' style="background:rgba(255,64,129,0.08)"':(d.isOtDayOff?' style="background:rgba(155,127,244,0.07)"':''))+'>'+
       '<td style="white-space:nowrap">'+d.date+(isDup?' <span style="color:var(--red);font-weight:700" title="Duplicate check-in: '+dupN+' rows this day">⚠️ x'+dupN+'</span>':'')+'</td>'+
       '<td style="white-space:nowrap">'+(d.shift||'—')+'</td>'+
       '<td style="white-space:nowrap">'+(d.checkIn||'—')+'</td>'+
@@ -5055,7 +5365,7 @@ function renderAttendanceDailyPanel(){
       '<td style="white-space:nowrap'+(d.isEarly?';color:var(--red);font-weight:700':'')+'">'+(d.earlyRaw||'—')+'</td>'+
       '<td style="white-space:nowrap">'+(d.workDurationMin?attFmtHM_(d.workDurationMin):'—')+'</td>'+
       '<td style="white-space:nowrap'+(d.isExtraBreakDay?';color:var(--red);font-weight:700':'')+'">'+(d.totalBreakMin?attFmtHM_(d.totalBreakMin):'—')+'</td>'+
-      '<td style="white-space:normal;color:var(--amber)">'+(d.remark||'')+'</td>'+
+      '<td style="white-space:normal;color:var(--amber)">'+(otBadge?(otBadge+(d.remark?' · ':'')):'')+(d.remark||'')+'</td>'+
     '</tr>';
   }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No daily records for this filter</td></tr>';
 }
@@ -5196,21 +5506,28 @@ function renderSchedule(){
     var row='<tr><td class="sched-col-name" title="'+a.name+'">'+a.name+'</td>'+
       '<td class="sched-col-psd">'+a.psdId+'</td>'+
       '<td class="sched-col-pos" title="'+position+'">'+position+'</td>';
-    var dayCount=0,nightCount=0,offCount=0;
+    var dayCount=0,nightCount=0,offCount=0,leaveCount=0;
     for(var d2=1;d2<=daysInMonth;d2++){
+      var leave=attLeaveParsed.byAgentDay[normPsd_(a.psdId)+'||'+schedMonthFilter+'||'+d2];
       var rec=byAgentDay[a.key+'-'+d2];
-      if(!rec){
+      if(leave){
+        leaveCount++;
+        var lt=LEAVE_TYPES[leave.type]||{short:leave.type.slice(0,3).toUpperCase(),full:leave.type,color:'#facc15'};
+        var ltip=a.name+' · '+schedMonthFilter+' '+d2+' · '+lt.full+(leave.note?(' — '+leave.note):'');
+        row+='<td><div class="sched-cell-inner" style="background:'+lt.color+'22;border:1.5px solid '+lt.color+';color:'+lt.color+';font-weight:800" title="'+ltip.replace(/"/g,'&quot;')+'">'+lt.short+'</div></td>';
+      } else if(!rec){
         offCount++;
         row+='<td><div class="sched-cell-inner sched-off" title="'+a.name+' · '+schedMonthFilter+' '+d2+' · Day Off">OFF</div></td>';
       } else {
         var isNight=schedNormShift_(rec.shift)==='night';
         if(isNight) nightCount++; else dayCount++;
-        var flagged=rec.isLate||rec.isEarly;
-        var cls='sched-cell-inner '+(isNight?'sched-night':'sched-day')+(flagged?' sched-flag':'');
+        var flagged=(rec.isLate||rec.isEarly)&&!rec.isOtDayOff;
+        var cls='sched-cell-inner '+(isNight?'sched-night':'sched-day')+(flagged?' sched-flag':'')+(rec.isOtDayOff?' sched-ot':'');
         var tip=a.name+' · '+rec.date+' · '+(isNight?'Night':'Day')+' shift'+
           (rec.checkIn?(' · In '+rec.checkIn):'')+(rec.checkOut?(' · Out '+rec.checkOut):'')+
-          (rec.isLate?' · LATE':'')+(rec.isEarly?' · EARLY OUT':'');
-        row+='<td><div class="'+cls+'" title="'+tip.replace(/"/g,'&quot;')+'">'+(isNight?'N':'D')+'</div></td>';
+          (rec.isOtDayOff?' · ⚡ OT (Day Off)':'')+
+          (flagged&&rec.isLate?' · LATE':'')+(flagged&&rec.isEarly?' · EARLY OUT':'');
+        row+='<td><div class="'+cls+'" title="'+tip.replace(/"/g,'&quot;')+'"'+(rec.isOtDayOff?' style="box-shadow:inset 0 0 0 1.5px var(--purple)"':'')+'>'+(isNight?'N':'D')+'</div></td>';
       }
     }
     row+='<td class="sched-sum-cell sched-sum-day sched-sum-first">'+dayCount+'</td>'+
@@ -5261,15 +5578,19 @@ function buildScheduleReportHtml_(){
     var row='<tr><td class="nm nm-agent">'+esc(a.name)+'</td><td class="nm nm-psd">'+esc(a.psdId)+'</td><td class="nm nm-pos">'+esc(position)+'</td>';
     var dayCount=0,nightCount=0,offCount=0;
     for(var d2=1;d2<=daysInMonth;d2++){
+      var leave=attLeaveParsed.byAgentDay[normPsd_(a.psdId)+'||'+schedMonthFilter+'||'+d2];
       var rec=byAgentDay[a.key+'-'+d2];
-      if(!rec){
+      if(leave){
+        var lt=LEAVE_TYPES[leave.type]||{short:leave.type.slice(0,3).toUpperCase(),full:leave.type,color:'#facc15'};
+        row+='<td><div class="cell off" style="border-color:'+lt.color+';color:'+lt.color+'" title="'+esc(lt.full+(leave.note?(' — '+leave.note):''))+'">'+lt.short+'</div></td>';
+      } else if(!rec){
         offCount++;
         row+='<td><div class="cell off">OFF</div></td>';
       } else {
         var isNight=schedNormShift_(rec.shift)==='night';
         if(isNight) nightCount++; else dayCount++;
-        var flagged=rec.isLate||rec.isEarly;
-        var tip=(rec.checkIn?('In '+rec.checkIn+' '):'')+(rec.checkOut?('Out '+rec.checkOut+' '):'')+(rec.isLate?'LATE ':'')+(rec.isEarly?'EARLY':'');
+        var flagged=(rec.isLate||rec.isEarly)&&!rec.isOtDayOff;
+        var tip=(rec.checkIn?('In '+rec.checkIn+' '):'')+(rec.checkOut?('Out '+rec.checkOut+' '):'')+(rec.isOtDayOff?'OT (Day Off) ':'')+(flagged&&rec.isLate?'LATE ':'')+(flagged&&rec.isEarly?'EARLY':'');
         row+='<td><div class="cell '+(isNight?'night':'day')+(flagged?' flag':'')+'" title="'+esc(tip.trim())+'">'+(isNight?'N':'D')+'</div></td>';
       }
     }
