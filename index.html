@@ -3069,6 +3069,22 @@ var ATT_EARLY_CHECKOUT_MIN=12*60;
 // excluded from Avg Work Duration so one bad row doesn't skew the average,
 // but still counted as "present" and flagged separately for manual review.
 var ATT_MAX_REASONABLE_WORK_MIN=16*60;
+// Forgot Check-Out: when the Attendance sheet's Remark column for a row is
+// exactly "Forgot Check-Out" (case-insensitive, whitespace-trimmed — a
+// consistent format the region owners commit to using), that day's Work
+// Duration is treated as a flat ATT_FORGOT_CHECKOUT_CAP_MIN (12h) for
+// purposes of the Avg Work Duration calculation ONLY. This does NOT touch:
+//   - the raw Work Duration shown in the Daily Records table (still the
+//     real/original value, e.g. 23h58m, for audit purposes)
+//   - the Long-Shift Anomaly flag (still uses the raw value, so these days
+//     keep showing up in ⚠️ Anomaly — deliberately, so managers can see how
+//     often a given agent forgets to check out)
+//   - late/early/extra-break checks (unaffected)
+// Applies identically to every region/currency.
+var ATT_FORGOT_CHECKOUT_CAP_MIN=12*60;
+function attIsForgotCheckoutRemark_(remark){
+  return String(remark||'').trim().toLowerCase()==='forgot check-out';
+}
 // Long-Shift Anomaly: a day with Work Duration exceeding this many minutes
 // (14h) gets flagged in the same "⚠️ Anomaly" bucket as duplicate check-ins.
 // This catches forgotten check-outs (agent clocks in, forgets to clock out,
@@ -3323,10 +3339,16 @@ function parseAttendance(rows,issueMap){
 
     var checkInVal=col.checkIn!==undefined?String(row[col.checkIn]||'').trim():'';
     var checkOutVal=col.checkOut!==undefined?String(row[col.checkOut]||'').trim():'';
+    var remarkVal=col.remark!==undefined?String(row[col.remark]||'').trim():'';
     // Likely a missed/broken check-out, not a real 0-hour or 16+-hour shift —
     // keep the raw Work Duration visible in the table, but exclude it from
     // Avg Work Duration and flag it for manual review in the sheet.
     var isAnomalousWork=!(issueCfg&&issueCfg.suppressExtraBreakAnomaly)&&(((checkInVal||checkOutVal)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
+    // Forgot Check-Out remark: caps the value used for Avg Work Duration at
+    // 12h, WITHOUT touching the raw workDurationMin (still real/original for
+    // display + still feeds the Long-Shift Anomaly check as-is).
+    var isForgotCheckout=attIsForgotCheckoutRemark_(remarkVal);
+    var workDurationMinForAvg=isForgotCheckout?ATT_FORGOT_CHECKOUT_CAP_MIN:workDurationMin;
 
     var name=col.name!==undefined?String(row[col.name]||'').trim():'';
     var entry={
@@ -3339,11 +3361,12 @@ function parseAttendance(rows,issueMap){
       lateRaw:lateStr, isLate:isLate, lateMin:lateMin,
       earlyRaw:isEarly?('Early '+Math.round(earlyMin)+'m'):(checkOutValEarly_?'OK':''), isEarly:isEarly, earlyMin:earlyMin,
       workDurationMin:workDurationMin, isAnomalousWork:isAnomalousWork,
+      isForgotCheckout:isForgotCheckout, workDurationMinForAvg:workDurationMinForAvg,
       totalBreakMin:totalBreakMin, breakCount:breakCount,
       shortBreakMin:shortBreakMin, shortBreakCount:shortBreakCnt,
       specialBreakMin:specialBreakMin, specialBreakCount:specialBreakCnt,
       extraBreakMin:extraBreakMin, isExtraBreakDay:isExtraBreakDay,
-      remark:col.remark!==undefined?String(row[col.remark]||'').trim():'',
+      remark:remarkVal,
       issueType:issueType, isOtDayOff:issueType==='OT_DAYOFF' // kept for back-compat with existing UI checks below
     };
     out.rowsRaw.push(entry);
@@ -3379,7 +3402,7 @@ function parseAttendance(rows,issueMap){
     agg.shortBreakMinTotal+=shortBreakMin;
     agg.specialBreakCountTotal+=specialBreakCnt;
     agg.specialBreakMinTotal+=specialBreakMin;
-    agg.workDurationMinTotal+=workDurationMin;
+    agg.workDurationMinTotal+=workDurationMinForAvg; // capped to 12h on Forgot Check-Out days; raw otherwise
     agg.totalBreakMinTotal+=totalBreakMin;
     agg.breakCountTotal+=breakCount;
     agg.days.push(entry);
@@ -3626,6 +3649,16 @@ function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultS
   var shiftTypes=pkrParseShiftTypeRef_(shiftTypeRefRows);
   if(!shiftTypes.length&&defaultShiftTypes&&defaultShiftTypes.length) shiftTypes=defaultShiftTypes;
   var hdrIdx=findHeaderRow_(rows,/employee\s*id/i);
+  // Remark column isn't at a fixed position in this sheet format, so it's
+  // located dynamically by header text (same approach as the generic
+  // parseAttendance() parser) — supports the Forgot Check-Out remark below
+  // regardless of exactly which column it ends up in.
+  var pkrRemarkColIdx=-1;
+  if(hdrIdx>=0&&rows[hdrIdx]){
+    for(var rc=0;rc<rows[hdrIdx].length;rc++){
+      if(/remark/i.test(String(rows[hdrIdx][rc]||''))){ pkrRemarkColIdx=rc; break; }
+    }
+  }
   var monthsSeen={};
   for(var r=hdrIdx+1;r<rows.length;r++){
     var row=rows[r]||[];
@@ -3724,6 +3757,13 @@ function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultS
     if(issueCfg&&issueCfg.suppressExtraBreakAnomaly){ isExtraBreakDay=false; extraBreakMin=0; }
 
     var isAnomalousWork=!(issueCfg&&issueCfg.suppressExtraBreakAnomaly)&&(((checkInRaw||checkOutRaw)&&workDurationMin<=0)||workDurationMin>ATT_MAX_REASONABLE_WORK_MIN);
+    // Forgot Check-Out remark: caps the value used for Avg Work Duration at
+    // 12h, WITHOUT touching the raw workDurationMin (still real/original for
+    // display + still feeds the Long-Shift Anomaly check as-is). Falls back
+    // to the known column 13 if the header-text search above didn't find one.
+    var remarkVal=String((pkrRemarkColIdx>=0?row[pkrRemarkColIdx]:row[13])||'').trim();
+    var isForgotCheckout=attIsForgotCheckoutRemark_(remarkVal);
+    var workDurationMinForAvg=isForgotCheckout?ATT_FORGOT_CHECKOUT_CAP_MIN:workDurationMin;
 
     var entry={
       date:dateStr, month:mo, day:day,
@@ -3734,6 +3774,7 @@ function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultS
       lateRaw:isLate?('Late '+Math.round(lateMin)+'m'):(checkIn?'On Time':''), isLate:isLate, lateMin:lateMin,
       earlyRaw:isEarly?('Early '+Math.round(earlyMin)+'m'):(checkOutRaw?'OK':''), isEarly:isEarly, earlyMin:earlyMin,
       workDurationMin:workDurationMin, isAnomalousWork:isAnomalousWork,
+      isForgotCheckout:isForgotCheckout, workDurationMinForAvg:workDurationMinForAvg,
       totalBreakMin:totalBreakMin, breakCount:breakCount,
       break5Min:break5Min, break5Count:break5Cnt,
       breakLt5Min:breakLt5Min, breakLt5Count:breakLt5Cnt,
@@ -3743,7 +3784,7 @@ function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultS
       shortBreakMin:breakLt5Min, shortBreakCount:breakLt5Cnt,
       specialBreakMin:breakSpecialMin, specialBreakCount:breakSpecialCnt,
       extraBreakMin:extraBreakMin, isExtraBreakDay:isExtraBreakDay,
-      remark:String(row[13]||'').trim(),
+      remark:remarkVal,
       issueType:issueType, isOtDayOff:issueType==='OT_DAYOFF'
     };
     out.rowsRaw.push(entry);
@@ -3776,7 +3817,7 @@ function parseAttendancePkrV2_(rows,shiftRows,issueMap,shiftTypeRefRows,defaultS
     agg.shortBreakMinTotal+=breakLt5Min;
     agg.specialBreakCountTotal+=breakSpecialCnt;
     agg.specialBreakMinTotal+=breakSpecialMin;
-    agg.workDurationMinTotal+=workDurationMin;
+    agg.workDurationMinTotal+=workDurationMinForAvg; // capped to 12h on Forgot Check-Out days; raw otherwise
     agg.totalBreakMinTotal+=totalBreakMin;
     agg.breakCountTotal+=breakCount;
     agg.days.push(entry);
