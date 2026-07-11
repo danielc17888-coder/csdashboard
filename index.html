@@ -1189,6 +1189,7 @@ body.light select option{background:#ffffff;color:#0c1e35}
     <div class="zoom-head">
       <div class="zoom-title"><span>🪪</span><span id="ap-title-text">Agent Profile</span></div>
       <div style="display:flex;align-items:center;gap:10px">
+        <button class="ref-btn" id="ap-export-btn" onclick="exportAgentProfileHtml_()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="apExport">Export</span></button>
         <select class="fsel" id="ap-month-sel" onchange="apSetMonthFilter(this.value)">
           <option value="all">All Months</option>
           <option value="Jan">January</option><option value="Feb">February</option><option value="Mar">March</option>
@@ -1202,6 +1203,20 @@ body.light select option{background:#ffffff;color:#0c1e35}
     <div class="zoom-body" id="ap-body"></div>
     <div class="zoom-foot" data-i18n="zoomEscHint">Press ESC or click outside to close</div>
     <input type="file" id="ap-avatar-file" accept="image/*" style="display:none" onchange="apOnAvatarFileSelected(this)">
+  </div>
+</div>
+
+<!-- Card drill-down popup — opens ON TOP of the Agent Audit Profile modal
+     when a KPI/Attendance/Duty card is clicked. Higher z-index than the
+     profile overlay so it visibly stacks above it rather than replacing it. -->
+<div class="zoom-overlay" id="ap-detail-overlay" style="z-index:1100" onclick="if(event.target===this)closeApDetailModal()">
+  <div class="zoom-box" style="width:min(720px,94vw);height:min(600px,88vh)">
+    <div class="zoom-head">
+      <div class="zoom-title"><span id="ap-detail-icon">📊</span><span id="ap-detail-title">Detail</span></div>
+      <button class="zoom-close" onclick="closeApDetailModal()">✕</button>
+    </div>
+    <div class="zoom-body" id="ap-detail-body"></div>
+    <div class="zoom-foot" data-i18n="zoomEscHint">Press ESC or click outside to close</div>
   </div>
 </div>
 
@@ -1634,7 +1649,7 @@ var T={
     // Sidebar nav labels reused via data-i18n (attendance/schedule pages)
     attendance:'Attendance',schedule:'Schedule',
     // Schedule page
-    schedExportReport:'Export Report',schedSubmitLeave:'Submit Leave',
+    schedExportReport:'Export Report',schedSubmitLeave:'Submit Leave',apExport:'Export',
     schedDay:'Day',schedMid:'Mid',schedNight:'Night',schedOff:'Off',
     schedLateEarly:'Late/Early',schedOtDayOff:'OT (Day Off)',schedSystemIssue:'System Issue',
     schedExtraBreak:'Extra Break (2h)',schedUpl:'UPL',schedSick:'Sick',schedAnnual:'Annual',
@@ -1731,7 +1746,7 @@ var T={
     // 侧边栏导航标签(考勤/排班页面)
     attendance:'考勤',schedule:'排班表',
     // Schedule 页面
-    schedExportReport:'导出报告',schedSubmitLeave:'提交请假',
+    schedExportReport:'导出报告',schedSubmitLeave:'提交请假',apExport:'导出',
     schedDay:'白班',schedMid:'中班',schedNight:'夜班',schedOff:'休息',
     schedLateEarly:'迟到/早退',schedOtDayOff:'OT（排休加班）',schedSystemIssue:'系统问题',
     schedExtraBreak:'超时休息（2小时）',schedUpl:'无薪假',schedSick:'病假',schedAnnual:'年假',
@@ -7019,6 +7034,44 @@ function computeAgentDutyDays_(agentKey,agentPsdId,monthFilter){
   });
   return {onDuty:workDays+dayOffDays,workDays:workDays,dayOffDays:dayOffDays};
 }
+// Same classification logic as computeAgentDutyDays_ above, but returns the
+// actual list of dates in each bucket instead of just counts — powers the
+// Duty & Leave Overview drill-down popup ("which exact days").
+function computeAgentDutyDetail_(agentKey,agentPsdId,monthFilter){
+  var months=expandMonths(monthFilter)||ATT_MO_ORDER;
+  var monthSet={}; months.forEach(function(m){ monthSet[m]=true; });
+  var psdKey=normPsd_(agentPsdId);
+  var attByMonthDay={};
+  (attParsed.rowsRaw||[]).forEach(function(r){
+    if(normPsd_(r.psdId)!==psdKey) return;
+    if(!monthSet[r.month]) return;
+    attByMonthDay[r.month+'-'+r.day]=r;
+  });
+  var work=[],dayOff=[],leave={UPL:[],SICK:[],ANNUAL:[]};
+  var monthly={}; // month -> {day,night,mid,other,off,attendanceOnly}
+  function bump_(month,bucket){ if(!monthly[month]) monthly[month]={day:0,night:0,mid:0,other:0,off:0,attendanceOnly:0}; monthly[month][bucket]++; }
+  months.forEach(function(month){
+    var daysInMonth=ATT_MO_DAYS_2026[ATT_MO_IDX[month]]||30;
+    var presentInRoster=dutyRosterParsed.rosterAgentMonths[agentKey+'||'+month];
+    var firstFilledDay=dutyRosterParsed.firstFilledDay[agentKey+'||'+month];
+    for(var d=1;d<=daysInMonth;d++){
+      var rosterKey=agentKey+'||'+month+'||'+d;
+      var leaveEntry=attLeaveParsed.byAgentDay[psdKey+'||'+month+'||'+d];
+      if(leaveEntry){ if(leave[leaveEntry.type]) leave[leaveEntry.type].push({date:month+' '+d,note:leaveEntry.note||''}); continue; }
+      if(dutyRosterParsed.resignByAgentDay[rosterKey]) continue;
+      if(dutyRosterParsed.shiftByAgentDay[rosterKey]){
+        var shiftWord=(dutyRosterParsed.shiftByAgentDay[rosterKey].shift||'').toLowerCase();
+        work.push(month+' '+d+' ('+dutyRosterParsed.shiftByAgentDay[rosterKey].shift+')');
+        bump_(month, shiftWord==='day'?'day':(shiftWord==='night'?'night':(shiftWord==='mid'?'mid':'other')));
+        continue;
+      }
+      if(dutyRosterParsed.weekOffByAgentDay[rosterKey]){ dayOff.push(month+' '+d); bump_(month,'off'); continue; }
+      if(presentInRoster&&firstFilledDay!==undefined&&d<firstFilledDay) continue;
+      if(attByMonthDay[month+'-'+d]){ work.push(month+' '+d+' ('+(lang==='zh'?'考勤打卡':'attendance check-in')+')'); bump_(month,'attendanceOnly'); continue; }
+    }
+  });
+  return {work:work,dayOff:dayOff,leave:leave,monthly:monthly};
+}
 // Counts UPL / Sick / Annual leave days for one agent over a month range.
 // attLeaveParsed.byAgentDay already merges BOTH real Leave Request
 // submissions and Roster-sheet leave markings (see loadAll()) — nothing
@@ -7061,6 +7114,33 @@ function attGetAgentSummary_(identity,monthFilter){
     if(looseKey) match=list.find(function(a){return normNameLoose_(a.name)===looseKey;});
   }
   return match||null;
+}
+
+// Every raw per-day attendance record (date, check-in/out, late/early/extra-
+// break flags & minutes, work duration, remark) for this agent across the
+// selected month filter — the same underlying rows attGetAgentSummary_()
+// aggregates from, just not collapsed into totals. Powers the Agent Audit
+// Profile's card drill-down popups (Attendance Rate / Punctuality / Early
+// Check-Out / Extra Break "which exact days" views).
+function attGetAgentDayRecords_(identity,monthFilter){
+  if(!attParsed||!attParsed.byAgentMonth) return [];
+  var months=expandMonths(monthFilter)||ATT_MO_ORDER;
+  var monthSet={}; months.forEach(function(m){ monthSet[m]=true; });
+  var psdKey=normPsd_(identity.psdId||'');
+  var nameUp=(identity.name||'').trim().toUpperCase();
+  var looseKey=identity.name?normNameLoose_(identity.name):'';
+  var out=[];
+  Object.keys(attParsed.byAgentMonth).forEach(function(k){
+    var agg=attParsed.byAgentMonth[k];
+    if(!monthSet[agg.month]) return;
+    var isMatch=(psdKey&&normPsd_(agg.psdId)===psdKey)||
+      (nameUp&&agg.name&&agg.name.trim().toUpperCase()===nameUp)||
+      (looseKey&&agg.name&&normNameLoose_(agg.name)===looseKey);
+    if(!isMatch) return;
+    out=out.concat(agg.days||[]);
+  });
+  out.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  return out;
 }
 
 function toggleSidebar(){
@@ -8117,7 +8197,7 @@ function aggregateAgentSLA(identity,monthFilter){
         return normNameLoose_(a.name)===normNameLoose_(identity.name);
       });
       if(!found) return;
-      monthly.push({month:mo,chats:found.chats||0,frt:found.frt||0,mrt:found.mrt||0,aht:found.aht||0,csat:found.csat||0});
+      monthly.push({month:mo,chats:found.chats||0,frt:found.frt||0,mrt:found.mrt||0,aht:found.aht||0,csat:found.csat||0,weeks:found.weeks||[]});
       totalChats+=found.chats||0;
       if(found.frt>0) frtVals.push(found.frt);
       if(found.mrt>0) mrtVals.push(found.mrt);
@@ -8216,6 +8296,7 @@ function apFilterDirectoryGrid(){
 var apChart=null;
 var apCurrentAgentKey=null;
 var apMonthFilter='all';
+var apDetailData=null; // snapshot for the card drill-down popup — see renderAgentProfileModal
 
 function openAgentProfile(key){
   var dir=buildAgentDirectory();
@@ -8348,12 +8429,12 @@ function renderAgentProfileModal(identity,slaAgg,qaEntries,profile){
   // KPI grid — 6 cards
   var kpi=
     '<div class="kpi-grid g6" style="margin-bottom:18px">'+
-      '<div class="kpi c-teal"><div class="kpi-lbl">'+(isZh?'总接单量':'Total Chats')+'</div><div class="kpi-val">'+fn(slaAgg.totalChats)+'</div></div>'+
-      '<div class="kpi c-purple"><div class="kpi-lbl">'+(isZh?'平均首响':'Avg FRT')+'</div><div class="kpi-val">'+(slaAgg.avgFrt?fmtMinSec_(slaAgg.avgFrt):'—')+'</div></div>'+
-      '<div class="kpi c-purple"><div class="kpi-lbl">'+(isZh?'平均回复':'Avg MRT')+'</div><div class="kpi-val">'+(slaAgg.avgMrt?fmtMinSec_(slaAgg.avgMrt):'—')+'</div></div>'+
-      '<div class="kpi c-amber"><div class="kpi-lbl">'+(isZh?'平均处理':'Avg AHT')+'</div><div class="kpi-val">'+(slaAgg.avgAht?fmtMinSec_(slaAgg.avgAht):'—')+'</div></div>'+
-      '<div class="kpi c-green"><div class="kpi-lbl">'+(isZh?'平均CSAT':'Avg CSAT')+'</div><div class="kpi-val">'+(slaAgg.avgCsat?slaAgg.avgCsat.toFixed(1):'—')+'</div></div>'+
-      '<div class="kpi c-red"><div class="kpi-lbl">'+(isZh?'QA错误数':'QA Errors')+'</div><div class="kpi-val">'+qaEntries.length+'</div></div>'+
+      '<div class="kpi c-teal" style="cursor:pointer" onclick="apOpenCardDetail_(\'totalChats\')"><div class="kpi-lbl">'+(isZh?'总接单量':'Total Chats')+'</div><div class="kpi-val">'+fn(slaAgg.totalChats)+'</div></div>'+
+      '<div class="kpi c-purple" style="cursor:pointer" onclick="apOpenCardDetail_(\'avgFrt\')"><div class="kpi-lbl">'+(isZh?'平均首响':'Avg FRT')+'</div><div class="kpi-val">'+(slaAgg.avgFrt?fmtMinSec_(slaAgg.avgFrt):'—')+'</div></div>'+
+      '<div class="kpi c-purple" style="cursor:pointer" onclick="apOpenCardDetail_(\'avgMrt\')"><div class="kpi-lbl">'+(isZh?'平均回复':'Avg MRT')+'</div><div class="kpi-val">'+(slaAgg.avgMrt?fmtMinSec_(slaAgg.avgMrt):'—')+'</div></div>'+
+      '<div class="kpi c-amber" style="cursor:pointer" onclick="apOpenCardDetail_(\'avgAht\')"><div class="kpi-lbl">'+(isZh?'平均处理':'Avg AHT')+'</div><div class="kpi-val">'+(slaAgg.avgAht?fmtMinSec_(slaAgg.avgAht):'—')+'</div></div>'+
+      '<div class="kpi c-green" style="cursor:pointer" onclick="apOpenCardDetail_(\'avgCsat\')"><div class="kpi-lbl">'+(isZh?'平均CSAT':'Avg CSAT')+'</div><div class="kpi-val">'+(slaAgg.avgCsat?slaAgg.avgCsat.toFixed(1):'—')+'</div></div>'+
+      '<div class="kpi c-red" style="cursor:pointer" onclick="apOpenCardDetail_(\'qaErrors\')"><div class="kpi-lbl">'+(isZh?'QA错误数':'QA Errors')+'</div><div class="kpi-val">'+qaEntries.length+'</div></div>'+
     '</div>';
 
   // Monthly trend chart
@@ -8400,10 +8481,10 @@ function renderAgentProfileModal(identity,slaAgg,qaEntries,profile){
     var attPeriodLbl=attPeriodLbl_(apMonthFilter,isZh);
     attSection='<div class="panel" style="margin-bottom:18px"><div class="ph"><div class="ph-t">🕒 '+(isZh?'考勤总览（'+attPeriodLbl+'）':'Attendance ('+attPeriodLbl+')')+'</div></div>'+
       '<div class="kpi-grid g4" style="padding:14px 16px 16px">'+
-        '<div class="kpi c-teal"><div class="kpi-lbl">'+(isZh?'出勤率':'Attendance Rate')+'</div><div class="kpi-val">'+(attSummary.attendanceRate*100).toFixed(0)+'%</div><div class="kpi-d">'+attSummary.daysPresent+'/'+attSummary.daysInMonth+' '+(isZh?'天':'days')+'</div></div>'+
-        '<div class="kpi c-green"><div class="kpi-lbl">'+(isZh?'准点率':'Punctuality Rate')+'</div><div class="kpi-val">'+(attSummary.punctualityRate*100).toFixed(0)+'%</div><div class="kpi-d">'+attSummary.lateCount+' '+(isZh?'次迟到':'late')+' · '+attFmtHM_(attSummary.lateMinTotal)+'</div></div>'+
-        '<div class="kpi c-amber"><div class="kpi-lbl">'+(isZh?'早退':'Early Check-Out')+'</div><div class="kpi-val">'+attSummary.earlyCount+'</div><div class="kpi-d">'+attFmtHM_(attSummary.earlyMinTotal)+' '+(isZh?'总计':'total')+'</div></div>'+
-        '<div class="kpi c-red"><div class="kpi-lbl">'+(isZh?'超额休息 (&gt;90min)':'Extra Break (&gt;90min)')+'</div><div class="kpi-val">'+attSummary.extraBreakDays+'</div><div class="kpi-d">'+attFmtHM_(attSummary.extraBreakMinTotal)+' '+(isZh?'超出':'over')+'</div></div>'+
+        '<div class="kpi c-teal" style="cursor:pointer" onclick="apOpenCardDetail_(\'attendanceRate\')"><div class="kpi-lbl">'+(isZh?'出勤率':'Attendance Rate')+'</div><div class="kpi-val">'+(attSummary.attendanceRate*100).toFixed(0)+'%</div><div class="kpi-d">'+attSummary.daysPresent+'/'+attSummary.daysInMonth+' '+(isZh?'天':'days')+'</div></div>'+
+        '<div class="kpi c-green" style="cursor:pointer" onclick="apOpenCardDetail_(\'punctualityRate\')"><div class="kpi-lbl">'+(isZh?'准点率':'Punctuality Rate')+'</div><div class="kpi-val">'+(attSummary.punctualityRate*100).toFixed(0)+'%</div><div class="kpi-d">'+attSummary.lateCount+' '+(isZh?'次迟到':'late')+' · '+attFmtHM_(attSummary.lateMinTotal)+'</div></div>'+
+        '<div class="kpi c-amber" style="cursor:pointer" onclick="apOpenCardDetail_(\'earlyCheckout\')"><div class="kpi-lbl">'+(isZh?'早退':'Early Check-Out')+'</div><div class="kpi-val">'+attSummary.earlyCount+'</div><div class="kpi-d">'+attFmtHM_(attSummary.earlyMinTotal)+' '+(isZh?'总计':'total')+'</div></div>'+
+        '<div class="kpi c-red" style="cursor:pointer" onclick="apOpenCardDetail_(\'extraBreak\')"><div class="kpi-lbl">'+(isZh?'超额休息 (&gt;90min)':'Extra Break (&gt;90min)')+'</div><div class="kpi-val">'+attSummary.extraBreakDays+'</div><div class="kpi-d">'+attFmtHM_(attSummary.extraBreakMinTotal)+' '+(isZh?'超出':'over')+'</div></div>'+
       '</div>'+
     '</div>';
   }
@@ -8426,10 +8507,10 @@ function renderAgentProfileModal(identity,slaAgg,qaEntries,profile){
       var dutyPeriodLbl=attPeriodLbl_(apMonthFilter,isZh);
       dutySection='<div class="panel" style="margin-bottom:18px"><div class="ph"><div class="ph-t">📅 '+(isZh?'在岗与请假总览（'+dutyPeriodLbl+'）':'Duty & Leave Overview ('+dutyPeriodLbl+')')+'</div></div>'+
         '<div class="kpi-grid g4" style="padding:14px 16px 16px">'+
-          '<div class="kpi c-teal"><div class="kpi-lbl">'+(isZh?'在岗天数':'Days On Duty')+'</div><div class="kpi-val">'+dutyDays.onDuty+'</div><div class="kpi-d">'+(isZh?'实际上班 ':'')+dutyDays.workDays+(isZh?'天 · Day Off ':' worked · ')+dutyDays.dayOffDays+(isZh?'天':' day off')+'</div></div>'+
-          '<div class="kpi" style="border-top-color:#ff9100"><div class="kpi-lbl">UPL</div><div class="kpi-val" style="color:#ff9100">'+leaveDays.UPL+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
-          '<div class="kpi" style="border-top-color:#ff4081"><div class="kpi-lbl">'+(isZh?'病假':'Sick Leave')+'</div><div class="kpi-val" style="color:#ff4081">'+leaveDays.SICK+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
-          '<div class="kpi" style="border-top-color:#00b0ff"><div class="kpi-lbl">'+(isZh?'年假':'Annual Leave')+'</div><div class="kpi-val" style="color:#00b0ff">'+leaveDays.ANNUAL+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
+          '<div class="kpi c-teal" style="cursor:pointer" onclick="apOpenCardDetail_(\'daysOnDuty\')"><div class="kpi-lbl">'+(isZh?'在岗天数':'Days On Duty')+'</div><div class="kpi-val">'+dutyDays.onDuty+'</div><div class="kpi-d">'+(isZh?'实际上班 ':'')+dutyDays.workDays+(isZh?'天 · Day Off ':' worked · ')+dutyDays.dayOffDays+(isZh?'天':' day off')+'</div></div>'+
+          '<div class="kpi" style="border-top-color:#ff9100;cursor:pointer" onclick="apOpenCardDetail_(\'upl\')"><div class="kpi-lbl">UPL</div><div class="kpi-val" style="color:#ff9100">'+leaveDays.UPL+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
+          '<div class="kpi" style="border-top-color:#ff4081;cursor:pointer" onclick="apOpenCardDetail_(\'sick\')"><div class="kpi-lbl">'+(isZh?'病假':'Sick Leave')+'</div><div class="kpi-val" style="color:#ff4081">'+leaveDays.SICK+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
+          '<div class="kpi" style="border-top-color:#00b0ff;cursor:pointer" onclick="apOpenCardDetail_(\'annual\')"><div class="kpi-lbl">'+(isZh?'年假':'Annual Leave')+'</div><div class="kpi-val" style="color:#00b0ff">'+leaveDays.ANNUAL+'</div><div class="kpi-d">'+(isZh?'天':'days')+'</div></div>'+
         '</div>'+
       '</div>';
     }
@@ -8437,6 +8518,17 @@ function renderAgentProfileModal(identity,slaAgg,qaEntries,profile){
 
   body.innerHTML=header+kpi+chartPanel+attSection+dutySection+qaSection;
   overlay.classList.add('open');
+
+  // Snapshot everything the card drill-down popup (apOpenCardDetail_) needs,
+  // captured fresh on every render so it always matches whatever's on screen
+  // (current agent + current month filter).
+  apDetailData={
+    identity:identity, slaAgg:slaAgg, qaEntries:qaEntries,
+    attSummary:(typeof attSummary!=='undefined')?attSummary:null,
+    dutyDays:(typeof dutyDays!=='undefined')?dutyDays:null,
+    leaveDays:(typeof leaveDays!=='undefined')?leaveDays:null,
+    monthFilter:apMonthFilter
+  };
 
   // Render the trend chart after the canvas exists in the DOM
   var ctx=document.getElementById('ap-chart');
@@ -8470,6 +8562,266 @@ function closeAgentProfileModal(){
   if(apChart){apChart.destroy();apChart=null;}
   apCurrentAgentKey=null;
 }
+
+// One-click standalone HTML export of the whole Agent Audit Profile modal —
+// Agent Info (incl. avatar photo), Task List, Remark, the KPI row (Total
+// Chats / AVG FRT / AVG MRT / AVG AHT / AVG CSAT / QA Errors), the Monthly
+// Chats/FRT Trend chart, Attendance (Year to Date) and Duty & Leave Overview
+// (Year to Date). Always reflects whatever month is currently selected in
+// the modal's month dropdown (apMonthFilter) — the DOM being exported is the
+// exact same DOM the user is looking at, so there's nothing extra to filter.
+// Shared by all three currencies (INR/PKR/PHP) since it's the same modal for
+// every region — no per-region wiring needed.
+function exportAgentProfileHtml_(){
+  var body=document.getElementById('ap-body');
+  var titleEl=document.getElementById('ap-title-text');
+  var btn=document.getElementById('ap-export-btn');
+  var isZh=lang==='zh';
+  if(!body||!apCurrentAgentKey){
+    alert(isZh?'请先打开一个坐席的档案再导出。':'Open an agent profile first, then export.');
+    return;
+  }
+  var origLabel=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> '+(isZh?'导出中…':'Exporting…');
+  try{
+    var clone=body.cloneNode(true);
+    // Freeze the live Chart.js canvas into a static <img> — a standalone
+    // exported file has no Chart.js/data bound to recreate it, so an empty
+    // <canvas> would just be blank without this swap.
+    var cloneCanvas=clone.querySelector('#ap-chart');
+    if(cloneCanvas&&apChart){
+      var img=document.createElement('img');
+      img.src=apChart.toBase64Image();
+      img.style.width='100%';
+      img.style.maxWidth='100%';
+      cloneCanvas.replaceWith(img);
+    }
+    // Strip interactive-only bits that can't do anything in a static file
+    // (avatar upload button, click-to-zoom / click handlers on cards, etc).
+    clone.querySelectorAll('.ap-avatar-upload-btn').forEach(function(el){ el.remove(); });
+    clone.querySelectorAll('[onclick]').forEach(function(el){ el.removeAttribute('onclick'); el.style.cursor='default'; });
+
+    var css=(document.getElementsByTagName('style')[0]||{}).textContent||'';
+    var monthSel=document.getElementById('ap-month-sel');
+    var monthLbl=(monthSel&&monthSel.selectedOptions&&monthSel.selectedOptions[0])?monthSel.selectedOptions[0].textContent:apMonthFilter;
+    var title=titleEl?titleEl.textContent:'Agent Profile';
+
+    var html='<!DOCTYPE html><html lang="'+(isZh?'zh':'en')+'"><head><meta charset="utf-8">'+
+      '<title>'+title+'</title>'+
+      '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">'+
+      '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">'+
+      '<style>'+css+'</style>'+
+      '<style>'+
+        'body{margin:0;padding:32px;background:var(--bg);color:var(--text);font-family:var(--font);}'+
+        '.ap-export-wrap{max-width:1000px;margin:0 auto;background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:24px}'+
+        '.ap-export-head{font-size:18px;font-weight:800;margin-bottom:4px}'+
+        '.ap-export-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:20px}'+
+      '</style>'+
+      '</head><body>'+
+        '<div class="ap-export-wrap">'+
+          '<div class="ap-export-head">🪪 '+title+'</div>'+
+          '<div class="ap-export-sub">'+(isZh?'月份范围：':'Month range: ')+monthLbl+' · '+currentRegion+' · '+(isZh?'生成时间：':'Generated: ')+new Date().toLocaleString()+'</div>'+
+          clone.innerHTML+
+        '</div>'+
+      '</body></html>';
+
+    var agentName=(title.split(/—|-/)[0]||'Agent').trim().replace(/[^a-z0-9]+/gi,'_')||'Agent';
+    var fname=currentRegion+'_'+agentName+'_'+apMonthFilter+'_Profile.html';
+    downloadHtmlFile_(html,fname);
+  }catch(e){
+    console.error('exportAgentProfileHtml_ failed:',e);
+    alert((isZh?'导出失败：':'Export failed: ')+e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=origLabel;
+  }
+}
+// ── CARD DRILL-DOWN POPUP ───────────────────────────────────────────────
+// Clicking any KPI / Attendance / Duty & Leave card in the Agent Audit
+// Profile opens this on top of the profile modal, showing exactly how that
+// number was calculated and the underlying weekly/day-level records behind
+// it. Reads from apDetailData, snapshotted at the bottom of
+// renderAgentProfileModal() every time the profile (re-)renders.
+var AP_DETAIL_TITLES={
+  totalChats:{en:'Total Chats — weekly breakdown',zh:'总接单量 — 按周拆分'},
+  avgFrt:{en:'Avg FRT — weekly breakdown',zh:'平均首响 — 按周拆分'},
+  avgMrt:{en:'Avg MRT — weekly breakdown',zh:'平均回复 — 按周拆分'},
+  avgAht:{en:'Avg AHT — weekly breakdown',zh:'平均处理 — 按周拆分'},
+  avgCsat:{en:'Avg CSAT — weekly breakdown',zh:'平均CSAT — 按周拆分'},
+  attendanceRate:{en:'Attendance Rate — how it\'s calculated',zh:'出勤率 — 计算方式'},
+  punctualityRate:{en:'Punctuality Rate — late days',zh:'准点率 — 迟到明细'},
+  earlyCheckout:{en:'Early Check-Out — days',zh:'早退 — 明细'},
+  extraBreak:{en:'Extra Break — days over allowance',zh:'超额休息 — 明细'},
+  daysOnDuty:{en:'Days On Duty — breakdown',zh:'在岗天数 — 明细'},
+  upl:{en:'UPL — dates',zh:'UPL — 日期明细'},
+  sick:{en:'Sick Leave — dates',zh:'病假 — 日期明细'},
+  annual:{en:'Annual Leave — dates',zh:'年假 — 日期明细'}
+};
+var AP_DETAIL_ICONS={totalChats:'💬',avgFrt:'⚡',avgMrt:'⚡',avgAht:'⏱️',avgCsat:'😊',attendanceRate:'🕒',punctualityRate:'⏰',earlyCheckout:'🚪',extraBreak:'☕',daysOnDuty:'📅',upl:'📅',sick:'📅',annual:'📅'};
+
+function apOpenCardDetail_(kind){
+  // QA Errors already has its own full list right below in the profile —
+  // no need to duplicate it in a popup, just scroll to it.
+  if(kind==='qaErrors'){
+    var qaPanels=document.querySelectorAll('#ap-body .panel');
+    var last=qaPanels[qaPanels.length-1];
+    if(last) last.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  if(!apDetailData||!apDetailData.identity) return;
+  var isZh=lang==='zh';
+  var d=apDetailData;
+  var bodyHtml;
+  switch(kind){
+    case 'totalChats': bodyHtml=apRenderSlaDetail_(d,'chats',isZh); break;
+    case 'avgFrt': bodyHtml=apRenderSlaDetail_(d,'frt',isZh); break;
+    case 'avgMrt': bodyHtml=apRenderSlaDetail_(d,'mrt',isZh); break;
+    case 'avgAht': bodyHtml=apRenderSlaDetail_(d,'aht',isZh); break;
+    case 'avgCsat': bodyHtml=apRenderSlaDetail_(d,'csat',isZh); break;
+    case 'attendanceRate': bodyHtml=apRenderAttendanceRateDetail_(d,isZh); break;
+    case 'punctualityRate': bodyHtml=apRenderDayFlagDetail_(d,isZh,'isLate','lateMin',
+        isZh?'准点率 = (出勤天数 − 迟到天数) ÷ 出勤天数。下面是所有被记为"迟到"的具体日期：':
+             'Punctuality Rate = (days present − late days) ÷ days present. Every date flagged as late is listed below:',
+        isZh?'迟到(分钟)':'Late (min)'); break;
+    case 'earlyCheckout': bodyHtml=apRenderDayFlagDetail_(d,isZh,'isEarly','earlyMin',
+        isZh?'下面是所有被记为"早退"的具体日期（签退时间早于排班要求）：':
+             'Every date flagged as an early check-out (checked out before the scheduled end time) is listed below:',
+        isZh?'早退(分钟)':'Early (min)'); break;
+    case 'extraBreak': bodyHtml=apRenderDayFlagDetail_(d,isZh,'isExtraBreakDay','extraBreakMin',
+        isZh?'下面是所有休息时间超过 90 分钟上限的具体日期：':
+             'Every date where total break time went over the 90-minute allowance is listed below:',
+        isZh?'超出(分钟)':'Over (min)'); break;
+    case 'daysOnDuty': case 'upl': case 'sick': case 'annual':
+      bodyHtml=apRenderDutyDetail_(d,isZh,kind); break;
+    default: bodyHtml='';
+  }
+  var t=AP_DETAIL_TITLES[kind];
+  document.getElementById('ap-detail-icon').textContent=AP_DETAIL_ICONS[kind]||'📊';
+  document.getElementById('ap-detail-title').textContent=t?(isZh?t.zh:t.en):'Detail';
+  document.getElementById('ap-detail-body').innerHTML=bodyHtml;
+  document.getElementById('ap-detail-overlay').classList.add('open');
+}
+function closeApDetailModal(){
+  var el=document.getElementById('ap-detail-overlay');
+  if(el) el.classList.remove('open');
+}
+function apExplainBox_(text){
+  return '<div class="panel" style="margin-bottom:14px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.6">'+text+'</div>';
+}
+function apDetailTable_(headers,rows){
+  if(!rows.length) return '<div class="ap-noprofile">—</div>';
+  var thead='<tr>'+headers.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
+  var tbody=rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('');
+  return '<div style="overflow:auto;max-height:400px"><table class="dt"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
+}
+function apChip_(x){
+  return '<span style="font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:3px 7px;display:inline-block">'+x+'</span>';
+}
+function apChipList_(label,arr){
+  if(!arr||!arr.length) return '';
+  return '<div class="panel" style="padding:12px 14px;margin-bottom:10px"><div class="ap-cell-lbl" style="margin-bottom:8px">'+label+' ('+arr.length+')</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px">'+arr.map(apChip_).join('')+'</div></div>';
+}
+
+// Total Chats / Avg FRT / Avg MRT / Avg AHT / Avg CSAT — every week's raw
+// value across the selected month filter (each pulled from the same SLA
+// sheet rows the summary card's average/total was built from).
+function apRenderSlaDetail_(d,metric,isZh){
+  var labels={chats:isZh?'接单量':'Chats',frt:'FRT',mrt:'MRT',aht:'AHT',csat:'CSAT'};
+  var formulas={
+    chats:isZh?'总接单量 = 所选月份范围内，每周"Total Chat"相加。下面是逐周明细：':'Total Chats = sum of each week\'s "Total Chat" across the selected month range. Weekly breakdown below:',
+    frt:isZh?'平均首响 = 所选月份范围内，每个有数据的周的 FRT 取平均值（没有数据的周不计入）。':'Avg FRT = the average of every week\'s FRT within the selected month range (weeks with no data are excluded).',
+    mrt:isZh?'平均回复 = 所选月份范围内，每个有数据的周的 MRT 取平均值。':'Avg MRT = the average of every week\'s MRT within the selected month range.',
+    aht:isZh?'平均处理 = 所选月份范围内，每个有数据的周的 AHT 取平均值。':'Avg AHT = the average of every week\'s AHT within the selected month range.',
+    csat:isZh?'平均CSAT = 所选月份范围内，每个有数据的周的 CSAT 取平均值。':'Avg CSAT = the average of every week\'s CSAT within the selected month range.'
+  };
+  var rows=[];
+  (d.slaAgg.monthly||[]).forEach(function(m){
+    (m.weeks||[]).forEach(function(w){
+      var val=w[metric];
+      if(!val) return;
+      var display=metric==='chats'?fn(val):(metric==='csat'?Number(val).toFixed(2):fmtMinSec_(val));
+      rows.push([m.month,w.label||('Week '+w.week),display]);
+    });
+  });
+  return apExplainBox_(formulas[metric])+apDetailTable_([isZh?'月份':'Month',isZh?'周':'Week',labels[metric]],rows);
+}
+
+// Attendance Rate — the formula plus the actual list of calendar dates with
+// no check-in record on file (this is what makes the rate what it is).
+function apRenderAttendanceRateDetail_(d,isZh){
+  var s=d.attSummary;
+  if(!s) return apExplainBox_(isZh?'该坐席暂无考勤数据。':'No attendance data for this agent.');
+  var formula=(isZh?
+    '出勤率 = 出勤天数 ÷ 所选范围内的自然日总数（'+s.daysPresent+' ÷ '+s.daysInMonth+' = '+(s.attendanceRate*100).toFixed(0)+'%）。"出勤天数"只看考勤表里是否有打卡记录，不会把请假/休息日从分母里扣掉。':
+    'Attendance Rate = days present ÷ total calendar days in the selected range ('+s.daysPresent+' ÷ '+s.daysInMonth+' = '+(s.attendanceRate*100).toFixed(0)+'%). "Days present" only checks whether Attendance has a check-in row — leave/rest days are NOT subtracted from the denominator.');
+  var records=attGetAgentDayRecords_(d.identity,d.monthFilter);
+  var presentSetByMonth={};
+  records.forEach(function(r){
+    if(!presentSetByMonth[r.month]) presentSetByMonth[r.month]={};
+    presentSetByMonth[r.month][r.day]=true;
+  });
+  var months=expandMonths(d.monthFilter)||ATT_MO_ORDER;
+  var rows=months.map(function(month){
+    var daysInMonth=ATT_MO_DAYS_2026[ATT_MO_IDX[month]]||30;
+    var presentCount=presentSetByMonth[month]?Object.keys(presentSetByMonth[month]).length:0;
+    return [month,presentCount,daysInMonth,(presentCount/daysInMonth*100).toFixed(0)+'%'];
+  });
+  return apExplainBox_(formula)+apDetailTable_([isZh?'月份':'Month',isZh?'签到天数':'Days Checked In',isZh?'当月天数':'Days in Month',isZh?'出勤率':'Rate'],rows);
+}
+
+// Punctuality Rate / Early Check-Out / Extra Break — same shape: formula +
+// the exact dates that flag counted, pulled straight from the per-day
+// attendance rows so it's provable, not just a number.
+function apRenderDayFlagDetail_(d,isZh,flagKey,minKey,formula,unitLabel){
+  var records=attGetAgentDayRecords_(d.identity,d.monthFilter).filter(function(r){return r[flagKey];});
+  var rows=records.map(function(r){
+    return [r.date||(r.month+' '+r.day), r.checkIn||'—', r.checkOut||'—', (r[minKey]?Math.round(r[minKey])+'m':'—')];
+  });
+  var headers=[isZh?'日期':'Date',isZh?'签到':'Check-In',isZh?'签退':'Check-Out',unitLabel];
+  return apExplainBox_(formula)+apDetailTable_(headers,rows);
+}
+
+// Days On Duty / UPL / Sick Leave / Annual Leave — the exact dates behind
+// each count, using the same Roster-primary classification the summary
+// number itself is built from (see computeAgentDutyDetail_).
+function apRenderDutyDetail_(d,isZh,kind){
+  var identity=d.identity;
+  var agentKey=normPsd_(identity.psdId||'');
+  var detail=computeAgentDutyDetail_(agentKey,identity.psdId,d.monthFilter);
+  var formulaMap={
+    daysOnDuty:isZh?'在岗天数 = 实际上班天数 + Roster 标注的 Day Off 天数（请假天数不计入）。':'Days On Duty = actual worked days + Roster-confirmed Day Off days (leave days are excluded).',
+    upl:isZh?'来自 Duty Roster 或正式 Leave Request 中被标记为 UPL 的具体日期。':'Specific dates marked UPL in the Duty Roster or a formal Leave Request.',
+    sick:isZh?'来自 Duty Roster 或正式 Leave Request 中被标记为病假(SL)的具体日期。':'Specific dates marked Sick Leave (SL) in the Duty Roster or a formal Leave Request.',
+    annual:isZh?'来自 Duty Roster 或正式 Leave Request 中被标记为年假(AL)的具体日期。':'Specific dates marked Annual Leave (AL) in the Duty Roster or a formal Leave Request.'
+  };
+  var listHtml;
+  if(kind==='daysOnDuty'){
+    var months=expandMonths(d.monthFilter)||ATT_MO_ORDER;
+    var hasAttendanceOnly=months.some(function(m){ return detail.monthly[m]&&detail.monthly[m].attendanceOnly>0; });
+    var headers=[isZh?'月份':'Month',isZh?'Day 班':'Day',isZh?'Night 班':'Night',isZh?'Mid 班':'Mid',isZh?'Off':'Off'];
+    if(hasAttendanceOnly) headers.push(isZh?'仅打卡(无排班)':'Attendance-only');
+    var rows=months.map(function(m){
+      var t=detail.monthly[m]||{day:0,night:0,mid:0,other:0,off:0,attendanceOnly:0};
+      var row=[m,t.day,t.night,t.mid,t.off];
+      if(hasAttendanceOnly) row.push(t.attendanceOnly);
+      return row;
+    });
+    listHtml=apDetailTable_(headers,rows);
+  } else {
+    var typeKey=kind==='upl'?'UPL':(kind==='sick'?'SICK':'ANNUAL');
+    var leaveList=detail.leave[typeKey]||[];
+    if(!leaveList.length){
+      listHtml='<div class="ap-noprofile">—</div>';
+    } else {
+      var rows2=leaveList.map(function(x){ return [x.date, x.note?x.note:'-']; });
+      listHtml=apDetailTable_([isZh?'日期':'Date',isZh?'备注':'Remark'],rows2);
+    }
+  }
+  return apExplainBox_(formulaMap[kind])+listHtml;
+}
+// ── END CARD DRILL-DOWN POPUP ───────────────────────────────────────────
 // ── END AGENT AUDIT PROFILE ─────────────────────────────────────────────
 
 // ── ZOOM MODAL — double-click any zoomable panel to enlarge it ─────────────
@@ -8530,7 +8882,7 @@ function closeZoomModal(){
 }
 
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){ closeZoomModal(); closeAgentProfileModal(); closeDetailModal(); }
+  if(e.key==='Escape'){ closeZoomModal(); closeApDetailModal(); closeAgentProfileModal(); closeDetailModal(); }
 });
 // ── END ZOOM MODAL ──────────────────────────────────────────────────────
 
