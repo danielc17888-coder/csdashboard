@@ -2047,6 +2047,23 @@ function loadAll(){
       Object.keys(dutyRosterParsed.leaveByAgentDay).forEach(function(k){
         if(!attLeaveParsed.byAgentDay[k]) attLeaveParsed.byAgentDay[k]=dutyRosterParsed.leaveByAgentDay[k];
       });
+      // PRIORITY FLIP (per region owner request, 2026-07): the Duty Roster is
+      // now the single source of truth for a day's shift/leave status. If the
+      // Roster cell explicitly says a working shift (Day/Night/Mid) for a
+      // given agent+day, that wins over ANY Leave Request on file for that
+      // same day — even a formal one submitted via "Submit Leave". This used
+      // to be the other way around ("a real Leave Request always wins"),
+      // which meant editing the Roster alone (e.g. SL -> Day) silently had
+      // no visible effect whenever an old Leave Request still existed for
+      // that day. Now the Roster is authoritative: change the Roster cell
+      // and it takes effect on the very next refresh, no need to also go
+      // edit/delete anything in the separate Leave Requests sheet.
+      Object.keys(dutyRosterParsed.shiftByAgentDay).forEach(function(k){
+        if(attLeaveParsed.byAgentDay[k]) delete attLeaveParsed.byAgentDay[k];
+      });
+      Object.keys(dutyRosterParsed.weekOffByAgentDay).forEach(function(k){
+        if(attLeaveParsed.byAgentDay[k]) delete attLeaveParsed.byAgentDay[k];
+      });
       attParsed=(cfg.attendanceFormat==='shift_lookup_v2')
         ?parseAttendancePkrV2_(raw.attendance,raw.shiftLookup,attIssueParsed.map,raw.shiftTypeRef,cfg.defaultShiftTypes)
         :parseAttendance(raw.attendance,attIssueParsed.map);
@@ -2792,6 +2809,15 @@ function doSubmitLeave_(token,psdId,name,note,btn){
       return fetchFromSheet_(cfg.attendanceSheetId,cfg.ranges.leaveRequests).then(function(rows){
         raw.leaveRequests=rows;
         attLeaveParsed=parseLeaveRequests(raw.leaveRequests);
+        // Keep the same Roster-wins-over-Leave-Request priority applied in
+        // loadAll() — otherwise a freshly submitted Leave Request here could
+        // re-hide a day the Roster already explicitly has a shift/day-off for.
+        Object.keys(dutyRosterParsed.shiftByAgentDay||{}).forEach(function(k){
+          if(attLeaveParsed.byAgentDay[k]) delete attLeaveParsed.byAgentDay[k];
+        });
+        Object.keys(dutyRosterParsed.weekOffByAgentDay||{}).forEach(function(k){
+          if(attLeaveParsed.byAgentDay[k]) delete attLeaveParsed.byAgentDay[k];
+        });
         renderSchedule();
         resetSubmitBtn_(btn); closeSubmitModal();
       });
@@ -4717,7 +4743,14 @@ function renderAll(){
   if(document.getElementById('page-audit')&&document.getElementById('page-audit').classList.contains('active')) renderAudit();
   if(raw.qa&&raw.qa.length){renderQA();}
   renderAttendance();
-  renderSchedule();
+  // Schedule rendering is wrapped defensively: one malformed Roster/Leave
+  // cell (e.g. a manual edit gone wrong) must never take down the rest of
+  // the dashboard. Before this fix, an uncaught error here stopped
+  // renderOverview() (and every currency/page after it) from ever running,
+  // which is what made the WHOLE dashboard go blank — not just Schedule.
+  try{ renderSchedule(); }catch(schedErr){
+    console.warn('renderSchedule() failed — Schedule page may show stale/partial data, but the rest of the dashboard is unaffected:',schedErr);
+  }
   renderOverview();
 }
 
@@ -6492,6 +6525,7 @@ function schedBuildData_(){
   // on the Schedule grid, and how the day's shift is decided.
   var byAgentDay={};
   agents.forEach(function(a){
+   try{
     var presentInRoster=dutyRosterParsed.rosterAgentMonths[a.key+'||'+schedMonthFilter];
     var firstFilledDay=dutyRosterParsed.firstFilledDay[a.key+'||'+schedMonthFilter];
     for(var d3=1;d3<=daysInMonth;d3++){
@@ -6568,6 +6602,9 @@ function schedBuildData_(){
       }
       // else: nothing recorded — falls through to the default OFF display.
     }
+   }catch(agentErr){
+     console.warn('schedBuildData_: skipped one agent\'s day-by-day build due to an error — other agents are unaffected',a&&a.name,agentErr);
+   }
   });
 
   var WEEKDAY_LETTERS=['S','M','T','W','T','F','S'];
@@ -6580,7 +6617,28 @@ function schedBuildData_(){
   return {daysInMonth:daysInMonth,agents:agents,byAgentDay:byAgentDay,WEEKDAY_LETTERS:WEEKDAY_LETTERS,JAN1_2026_DOW:JAN1_2026_DOW,monthStartOffset:monthStartOffset};
 }
 
+// Top-level entry point — deliberately just a thin try/catch wrapper around
+// renderSchedule_inner_(). This is the last line of defense: even if a bug
+// slips past the more targeted try/catch blocks inside schedBuildData_()
+// and the row-building loop below, it STILL can't escape this function and
+// blank out the rest of the dashboard (Overview, SLA, etc.) — it just shows
+// an error message on the Schedule page itself and leaves everything else
+// working normally.
 function renderSchedule(){
+  try{
+    renderSchedule_inner_();
+  }catch(e){
+    console.error('renderSchedule failed:',e);
+    var emptyEl2=document.getElementById('sched-empty');
+    var bodyEl2=document.getElementById('sched-body');
+    if(emptyEl2){
+      emptyEl2.style.display='block';
+      emptyEl2.textContent='⚠ Schedule page hit an error and could not render: '+e.message+' — check the browser console for details. The rest of the dashboard is unaffected.';
+    }
+    if(bodyEl2) bodyEl2.style.display='none';
+  }
+}
+function renderSchedule_inner_(){
   schedHighlightedDay=null; // any re-render replaces the DOM entirely, so a stale "day X was highlighted" flag would otherwise silently break the next click
   var emptyEl=document.getElementById('sched-empty');
   var bodyEl=document.getElementById('sched-body');
@@ -6638,6 +6696,7 @@ function renderSchedule(){
   subHtml+='<th class="sched-sum-first">&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th></tr>';
 
   var bodyHtml=agents.map(function(a){
+   try{
     var profile=findAgentProfile_(a.key,a.name);
     var position=(profile&&profile.position)?profile.position:'—';
     var row='<tr><td class="sched-col-name" title="'+a.name+'">'+a.name+'</td>'+
@@ -6697,6 +6756,10 @@ function renderSchedule(){
       '<td class="sched-sum-cell sched-sum-off">'+offCount+'</td>';
     row+='</tr>';
     return row;
+   }catch(rowErr){
+     console.warn('renderSchedule: skipped one agent\'s row due to an error — other agents are unaffected',a&&a.name,rowErr);
+     return '<tr><td colspan="'+(daysInMonth+7)+'" style="color:var(--red);font-family:var(--font);font-size:11px;padding:6px">⚠ '+(a&&a.name?a.name:'agent')+' — row could not be rendered (see console)</td></tr>';
+   }
   }).join('') || '<tr><td colspan="'+(daysInMonth+7)+'" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--font)">No agents match this filter</td></tr>';
 
   var wrap=document.getElementById('sched-grid-wrap');
